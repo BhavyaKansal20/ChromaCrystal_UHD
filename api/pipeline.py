@@ -1,4 +1,5 @@
 import os
+import sys
 import cv2
 import torch
 import numpy as np
@@ -53,15 +54,6 @@ class ChromaCrystalPipeline:
             print(f"Warning: Could not load RealESRGAN: {e}")
 
         try:
-            session_options = onnxruntime.SessionOptions()
-            session_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
-            providers = ["CUDAExecutionProvider", "CPUExecutionProvider"] if self.device == "cuda" else ["CPUExecutionProvider"]
-            self.deoldify_session = onnxruntime.InferenceSession('weights/deoldify.onnx', sess_options=session_options, providers=providers)
-            print("DeOldify ONNX model loaded successfully.")
-        except Exception as e:
-            print(f"Warning: Could not load DeOldify ONNX: {e}")
-
-        try:
             self.face_enhancer = GFPGANer(
                 model_path='weights/GFPGANv1.4.pth',
                 upscale=2,
@@ -100,42 +92,26 @@ class ChromaCrystalPipeline:
         img_enhanced = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
         if progress_callback: progress_callback(0.3)
         
-        img_colored = img_enhanced
-        is_gray = np.mean(np.var(img_enhanced, axis=2)) < 15.0
-        if is_gray:
             try:
-                if self.deoldify_session is None:
-                    raise ValueError("DeOldify model not loaded")
+                import subprocess
+                import uuid
+                
+                print("Running DeOldify isolated in subprocess...")
+                temp_in = f"temp_in_{uuid.uuid4().hex}.jpg"
+                temp_out = f"temp_out_{uuid.uuid4().hex}.jpg"
+                cv2.imwrite(temp_in, img_enhanced)
+                
+                result = subprocess.run([sys.executable, "deoldify_worker.py", temp_in, temp_out], capture_output=True)
+                
+                if result.returncode == 0 and os.path.exists(temp_out):
+                    img_colored = cv2.imread(temp_out)
+                    print("DeOldify colorization successful. Memory fully released.")
+                else:
+                    print(f"Subprocess colorization failed: {result.stderr.decode('utf-8')}")
+                    img_colored = cv2.applyColorMap(cv2.cvtColor(img_enhanced, cv2.COLOR_BGR2GRAY), cv2.COLORMAP_BONE)
                     
-                targetL = cv2.cvtColor(img_enhanced, cv2.COLOR_BGR2LAB)[:, :, 0]
-                
-                # Preprocess for DeOldify
-                gray = cv2.cvtColor(img_enhanced, cv2.COLOR_BGR2GRAY)
-                gray_rgb = cv2.cvtColor(gray, cv2.COLOR_GRAY2RGB)
-                h, w = gray_rgb.shape[:2]
-                
-                # DeOldify usually uses 256 for Artistic
-                r_factor = 256
-                resized = cv2.resize(gray_rgb, (r_factor, r_factor))
-                inp = resized.astype(np.float32).transpose((2, 0, 1))
-                inp = np.expand_dims(inp, axis=0)
-                
-                # Inference
-                input_name = self.deoldify_session.get_inputs()[0].name
-                out = self.deoldify_session.run(None, {input_name: inp})[0][0]
-                
-                # Postprocess
-                colorized = out.transpose(1, 2, 0)
-                colorized = cv2.cvtColor(colorized, cv2.COLOR_BGR2RGB).astype(np.uint8)
-                colorized = cv2.resize(colorized, (w, h))
-                colorized = cv2.GaussianBlur(colorized, (13, 13), 0)
-                
-                # Merge original luminance with predicted AB
-                colorized_lab = cv2.cvtColor(colorized, cv2.COLOR_BGR2LAB)
-                _, A, B = cv2.split(colorized_lab)
-                colorized_merged = cv2.merge((targetL, A, B))
-                img_colored = cv2.cvtColor(colorized_merged, cv2.COLOR_LAB2BGR)
-                print("DeOldify colorization successful.")
+                if os.path.exists(temp_in): os.remove(temp_in)
+                if os.path.exists(temp_out): os.remove(temp_out)
                 
             except Exception as e:
                 print(f"Colorization failed: {e}")
