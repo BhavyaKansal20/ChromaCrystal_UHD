@@ -1,7 +1,6 @@
 import os
 import sys
 import cv2
-import torch
 import numpy as np
 from PIL import Image
 import onnxruntime
@@ -12,58 +11,20 @@ try:
 except ImportError:
     pass
 
-try:
-    from gfpgan import GFPGANer
-    from realesrgan import RealESRGANer
-    from basicsr.archs.rrdbnet_arch import RRDBNet
-    has_heavy_models = True
-except ImportError:
-    has_heavy_models = False
+# Heavy model imports removed for memory isolation.
+# Subprocess workers will import them on demand.
+has_heavy_models = True
 
 class ChromaCrystalPipeline:
     def __init__(self):
-        self.device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
         self.models_loaded = False
         self.deoldify_session = None
-        self.face_enhancer = None
-        self.upscaler = None
+        # GFPGAN and RealESRGAN are now isolated in subprocess workers
+        self.face_enhancer_enabled = True
+        self.upscaler_enabled = True
 
     def load_models(self):
-        if self.models_loaded:
-            return
-        print(f"Loading models on {self.device}...")
-        
-        if not has_heavy_models:
-            print("Heavy model libraries not installed. Running in light/fallback mode.")
-            self.models_loaded = True
-            return
-
-        try:
-            model = RRDBNet(num_in_ch=3, num_out_ch=3, num_feat=64, num_block=23, num_grow_ch=32, scale=4)
-            self.upscaler = RealESRGANer(
-                scale=4,
-                model_path='weights/RealESRGAN_x4plus.pth',
-                model=model,
-                tile=400,
-                tile_pad=10,
-                pre_pad=0,
-                half=True if self.device == "cuda" else False,
-                device=self.device
-            )
-        except Exception as e:
-            print(f"Warning: Could not load RealESRGAN: {e}")
-
-        try:
-            self.face_enhancer = GFPGANer(
-                model_path='weights/GFPGANv1.4.pth',
-                upscale=1,
-                arch='clean',
-                channel_multiplier=2,
-                bg_upsampler=None
-            )
-        except Exception as e:
-            print(f"Warning: Could not load GFPGAN: {e}")
-
+        # Models are no longer loaded into the main process to prevent OOM
         self.models_loaded = True
 
     def process_image(self, input_path: str, output_path: str, progress_callback=None, upscale_factor=4, color_intensity=1.0, denoise_strength=10):
@@ -92,30 +53,30 @@ class ChromaCrystalPipeline:
         img_enhanced = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
         if progress_callback: progress_callback(0.3)
         
-            try:
-                import subprocess
-                import uuid
-                
-                print("Running DeOldify isolated in subprocess...")
-                temp_in = f"temp_in_{uuid.uuid4().hex}.jpg"
-                temp_out = f"temp_out_{uuid.uuid4().hex}.jpg"
-                cv2.imwrite(temp_in, img_enhanced)
-                
-                result = subprocess.run([sys.executable, "deoldify_worker.py", temp_in, temp_out], capture_output=True)
-                
-                if result.returncode == 0 and os.path.exists(temp_out):
-                    img_colored = cv2.imread(temp_out)
-                    print("DeOldify colorization successful. Memory fully released.")
-                else:
-                    print(f"Subprocess colorization failed: {result.stderr.decode('utf-8')}")
-                    img_colored = cv2.applyColorMap(cv2.cvtColor(img_enhanced, cv2.COLOR_BGR2GRAY), cv2.COLORMAP_BONE)
-                    
-                if os.path.exists(temp_in): os.remove(temp_in)
-                if os.path.exists(temp_out): os.remove(temp_out)
-                
-            except Exception as e:
-                print(f"Colorization failed: {e}")
+        try:
+            import subprocess
+            import uuid
+            
+            print("Running DeOldify isolated in subprocess...")
+            temp_in = f"temp_in_{uuid.uuid4().hex}.jpg"
+            temp_out = f"temp_out_{uuid.uuid4().hex}.jpg"
+            cv2.imwrite(temp_in, img_enhanced)
+            
+            result = subprocess.run([sys.executable, "deoldify_worker.py", temp_in, temp_out], capture_output=True)
+            
+            if result.returncode == 0 and os.path.exists(temp_out):
+                img_colored = cv2.imread(temp_out)
+                print("DeOldify colorization successful. Memory fully released.")
+            else:
+                print(f"Subprocess colorization failed: {result.stderr.decode('utf-8')}")
                 img_colored = cv2.applyColorMap(cv2.cvtColor(img_enhanced, cv2.COLOR_BGR2GRAY), cv2.COLORMAP_BONE)
+                
+            if os.path.exists(temp_in): os.remove(temp_in)
+            if os.path.exists(temp_out): os.remove(temp_out)
+            
+        except Exception as e:
+            print(f"Colorization failed: {e}")
+            img_colored = cv2.applyColorMap(cv2.cvtColor(img_enhanced, cv2.COLOR_BGR2GRAY), cv2.COLORMAP_BONE)
             
         if color_intensity != 1.0:
             hsv = cv2.cvtColor(img_colored, cv2.COLOR_BGR2HSV).astype(np.float32)
@@ -123,10 +84,26 @@ class ChromaCrystalPipeline:
             img_colored = cv2.cvtColor(hsv.astype(np.uint8), cv2.COLOR_HSV2BGR)
         if progress_callback: progress_callback(0.5)
 
-        if self.face_enhancer:
+        if self.face_enhancer_enabled:
             try:
-                print("Running Face Enhancer...")
-                _, _, img_restored = self.face_enhancer.enhance(img_colored, has_aligned=False, only_center_face=False, paste_back=True)
+                import subprocess
+                import uuid
+                print("Running Face Enhancer isolated in subprocess...")
+                temp_in = f"temp_in_gfp_{uuid.uuid4().hex}.jpg"
+                temp_out = f"temp_out_gfp_{uuid.uuid4().hex}.jpg"
+                cv2.imwrite(temp_in, img_colored)
+                
+                result = subprocess.run([sys.executable, "gfpgan_worker.py", temp_in, temp_out], capture_output=True)
+                
+                if result.returncode == 0 and os.path.exists(temp_out):
+                    img_restored = cv2.imread(temp_out)
+                    print("GFPGAN successful. Memory fully released.")
+                else:
+                    print(f"Subprocess GFPGAN failed: {result.stderr.decode('utf-8')}")
+                    img_restored = img_colored
+                    
+                if os.path.exists(temp_in): os.remove(temp_in)
+                if os.path.exists(temp_out): os.remove(temp_out)
             except Exception as e:
                 print(f"Face enhancer failed: {e}")
                 img_restored = img_colored
@@ -135,10 +112,27 @@ class ChromaCrystalPipeline:
             
         if progress_callback: progress_callback(0.7)
 
-        if self.upscaler:
+        if self.upscaler_enabled:
             try:
-                print("Running Real-ESRGAN Upscaler...")
-                img_upscaled, _ = self.upscaler.enhance(img_restored, outscale=upscale_factor)
+                import subprocess
+                import uuid
+                print("Running Real-ESRGAN Upscaler isolated in subprocess...")
+                temp_in = f"temp_in_esr_{uuid.uuid4().hex}.jpg"
+                temp_out = f"temp_out_esr_{uuid.uuid4().hex}.jpg"
+                cv2.imwrite(temp_in, img_restored)
+                
+                result = subprocess.run([sys.executable, "realesrgan_worker.py", temp_in, temp_out, str(upscale_factor)], capture_output=True)
+                
+                if result.returncode == 0 and os.path.exists(temp_out):
+                    img_upscaled = cv2.imread(temp_out)
+                    print("RealESRGAN successful. Memory fully released.")
+                else:
+                    print(f"Subprocess RealESRGAN failed: {result.stderr.decode('utf-8')}")
+                    h, w = img_restored.shape[:2]
+                    img_upscaled = cv2.resize(img_restored, (int(w*upscale_factor), int(h*upscale_factor)), interpolation=cv2.INTER_CUBIC)
+                    
+                if os.path.exists(temp_in): os.remove(temp_in)
+                if os.path.exists(temp_out): os.remove(temp_out)
             except Exception as e:
                 print(f"Upscaler failed: {e}")
                 h, w = img_restored.shape[:2]

@@ -9,8 +9,9 @@ import { motion } from "framer-motion";
 export default function Home() {
   const [file, setFile] = useState<File | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
-  const [status, setStatus] = useState<string>("idle"); // idle, processing, completed, error
+  const [status, setStatus] = useState<string>("idle"); // idle, pending, processing, completed, error
   const [progress, setProgress] = useState<number>(0);
+  const [queuePosition, setQueuePosition] = useState<number | null>(null);
   const [resultUrl, setResultUrl] = useState<string | null>(null);
   const [originalUrl, setOriginalUrl] = useState<string | null>(null);
   const [upscaleFactor, setUpscaleFactor] = useState<number>(4);
@@ -20,8 +21,9 @@ export default function Home() {
 
   const handleUpload = async (selectedFile: File) => {
     setFile(selectedFile);
-    setStatus("processing");
+    setStatus("pending");
     setProgress(0);
+    setQueuePosition(null);
     setOriginalUrl(URL.createObjectURL(selectedFile));
 
     const formData = new FormData();
@@ -56,6 +58,7 @@ export default function Home() {
         const data = await res.json();
         
         setProgress(data.progress * 100);
+        setQueuePosition(data.queue_position);
         
         if (data.status === "completed") {
           clearInterval(interval);
@@ -64,6 +67,8 @@ export default function Home() {
         } else if (data.status === "failed") {
           clearInterval(interval);
           setStatus("error");
+        } else {
+          setStatus(data.status);
         }
       } catch (err) {
         console.error(err);
@@ -172,8 +177,8 @@ export default function Home() {
           </div>
         )}
 
-        {status === "processing" && (
-          <ProcessingOverlay progress={progress} />
+        {(status === "processing" || status === "pending") && (
+          <ProcessingOverlay progress={progress} queuePosition={queuePosition} status={status} />
         )}
 
         {status === "completed" && originalUrl && resultUrl && (

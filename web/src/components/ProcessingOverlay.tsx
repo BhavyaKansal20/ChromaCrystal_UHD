@@ -1,6 +1,14 @@
 import { motion } from "framer-motion";
 
-export function ProcessingOverlay({ progress }: { progress: number }) {
+export function ProcessingOverlay({ 
+  progress, 
+  queuePosition, 
+  status 
+}: { 
+  progress: number; 
+  queuePosition: number | null; 
+  status: string;
+}) {
   const steps = [
     { label: "Analyzing Historical Details...", threshold: 0 },
     { label: "Restoring Facial Textures...", threshold: 30 },
@@ -10,6 +18,8 @@ export function ProcessingOverlay({ progress }: { progress: number }) {
   ];
 
   const currentStep = steps.reverse().find((s) => progress >= s.threshold)?.label || steps[0].label;
+
+  const isQueued = status === "pending";
 
   return (
     <div className="py-20 flex flex-col items-center justify-center text-center">
@@ -31,9 +41,15 @@ export function ProcessingOverlay({ progress }: { progress: number }) {
             stroke="url(#gradient)"
             strokeWidth="4"
             strokeLinecap="round"
-            initial={{ strokeDasharray: "0 300" }}
-            animate={{ strokeDasharray: `${progress * 2.83} 300` }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            initial={{ strokeDasharray: isQueued ? "60 220" : "0 300" }}
+            animate={isQueued 
+              ? { strokeDashoffset: [0, -280] }
+              : { strokeDasharray: `${progress * 2.83} 300`, strokeDashoffset: 0 }
+            }
+            transition={isQueued
+              ? { repeat: Infinity, duration: 1.5, ease: "linear" }
+              : { duration: 0.5, ease: "easeOut" }
+            }
           />
           <defs>
             <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -42,18 +58,37 @@ export function ProcessingOverlay({ progress }: { progress: number }) {
             </linearGradient>
           </defs>
         </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-3xl font-bold glow-text">{Math.round(progress)}%</span>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          {isQueued ? (
+            <>
+              <span className="text-xs text-gray-500 font-semibold tracking-widest uppercase mb-1">Queue</span>
+              <span className="text-3xl font-bold glow-text leading-none">
+                {queuePosition !== null ? `#${queuePosition + 1}` : "..."}
+              </span>
+            </>
+          ) : (
+            <span className="text-3xl font-bold glow-text">{Math.round(progress)}%</span>
+          )}
         </div>
       </div>
       
       <motion.div
-        key={currentStep}
+        key={isQueued ? `queue-${queuePosition}` : currentStep}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-2xl font-light tracking-wide text-neon-blue"
+        className="text-2xl font-light tracking-wide text-neon-blue h-8"
       >
-        {currentStep}
+        {isQueued ? (
+          queuePosition === 0 ? (
+            <span className="text-neon-purple font-medium">You are next in line. Preparing restoration...</span>
+          ) : queuePosition !== null ? (
+            <span>Waiting in queue ({queuePosition} {queuePosition === 1 ? 'job' : 'jobs'} ahead)</span>
+          ) : (
+            <span>Connecting to queue...</span>
+          )
+        ) : (
+          currentStep
+        )}
       </motion.div>
     </div>
   );
