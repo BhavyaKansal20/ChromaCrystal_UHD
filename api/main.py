@@ -62,10 +62,14 @@ async def upload_image(
     db: Session = Depends(database.get_db)
 ):
     job_id = str(uuid.uuid4())
-    ext = file.filename.split('.')[-1] if '.' in file.filename else 'jpg'
-    input_filename = f"{job_id}_input.{ext}"
-    output_filename = f"{job_id}_output.jpg"
-    
+    original_ext = file.filename.split('.')[-1].lower() if '.' in file.filename else 'jpg'
+    # Use original extension, but fallback to jpg if it's an obscure un-saveable format internally, though OpenCV handles most.
+    ext = original_ext
+    if ext in ['heic', 'heif']:
+        ext = 'jpg' # OpenCV imwrite cannot write HEIC natively without heavy plugins
+        
+    input_filename = f"{job_id}_input.{original_ext}"
+    output_filename = f"{job_id}_output.{ext}"
     input_path = os.path.join(UPLOAD_DIR, input_filename)
     output_path = os.path.join(PROCESSED_DIR, output_filename)
     

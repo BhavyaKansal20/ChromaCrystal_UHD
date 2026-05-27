@@ -27,7 +27,7 @@ export function BeforeAfterSlider({ original, result }: { original: string, resu
       <img 
         src={original} 
         alt="Original" 
-        className="absolute inset-0 w-full h-full object-cover filter grayscale"
+        className="absolute inset-0 w-full h-full object-contain filter grayscale"
         draggable="false"
       />
       
@@ -39,7 +39,7 @@ export function BeforeAfterSlider({ original, result }: { original: string, resu
         <img 
           src={result} 
           alt="Restored" 
-          className="absolute inset-0 w-full h-full object-cover max-w-none"
+          className="absolute inset-0 h-full object-contain max-w-none"
           style={{ width: containerRef.current?.offsetWidth || '100%' }}
           draggable="false"
         />

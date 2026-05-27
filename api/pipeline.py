@@ -3,6 +3,13 @@ import cv2
 import torch
 import numpy as np
 from PIL import Image
+import onnxruntime
+
+try:
+    from pillow_heif import register_heif_opener
+    register_heif_opener()
+except ImportError:
+    pass
 
 try:
     from gfpgan import GFPGANer
@@ -16,7 +23,7 @@ class ChromaCrystalPipeline:
     def __init__(self):
         self.device = "cuda" if torch.cuda.is_available() else ("mps" if torch.backends.mps.is_available() else "cpu")
         self.models_loaded = False
-        self.colorizer = None
+        self.deoldify_session = None
         self.face_enhancer = None
         self.upscaler = None
 
@@ -46,6 +53,15 @@ class ChromaCrystalPipeline:
             print(f"Warning: Could not load RealESRGAN: {e}")
 
         try:
+            session_options = onnxruntime.SessionOptions()
+            session_options.graph_optimization_level = onnxruntime.GraphOptimizationLevel.ORT_ENABLE_ALL
+            providers = ["CUDAExecutionProvider", "CPUExecutionProvider"] if self.device == "cuda" else ["CPUExecutionProvider"]
+            self.deoldify_session = onnxruntime.InferenceSession('weights/deoldify.onnx', sess_options=session_options, providers=providers)
+            print("DeOldify ONNX model loaded successfully.")
+        except Exception as e:
+            print(f"Warning: Could not load DeOldify ONNX: {e}")
+
+        try:
             self.face_enhancer = GFPGANer(
                 model_path='weights/GFPGANv1.4.pth',
                 upscale=2,
@@ -62,7 +78,14 @@ class ChromaCrystalPipeline:
         self.load_models()
         if progress_callback: progress_callback(0.1)
 
-        img = cv2.imread(input_path)
+        try:
+            # Use PIL for robust format support including .heic, .webp, etc.
+            pil_img = Image.open(input_path).convert('RGB')
+            img = cv2.cvtColor(np.array(pil_img), cv2.COLOR_RGB2BGR)
+        except Exception as e:
+            print(f"PIL read failed, falling back to cv2: {e}")
+            img = cv2.imread(input_path)
+            
         if img is None:
             raise ValueError("Invalid image file")
         
@@ -81,33 +104,39 @@ class ChromaCrystalPipeline:
         is_gray = np.mean(np.var(img_enhanced, axis=2)) < 15.0
         if is_gray:
             try:
-                prototxt = "weights/colorization_deploy_v2.prototxt"
-                caffemodel = "weights/colorization_release_v2.caffemodel"
-                pts = "weights/pts_in_hull.npy"
+                if self.deoldify_session is None:
+                    raise ValueError("DeOldify model not loaded")
+                    
+                targetL = cv2.cvtColor(img_enhanced, cv2.COLOR_BGR2LAB)[:, :, 0]
                 
-                net = cv2.dnn.readNetFromCaffe(prototxt, caffemodel)
-                pts_arr = np.load(pts)
-                class8 = net.getLayerId("class8_ab")
-                conv8 = net.getLayerId("conv8_313_rh")
-                pts_arr = pts_arr.transpose().reshape(2, 313, 1, 1)
-                net.getLayer(class8).blobs = [pts_arr.astype(np.float32)]
-                net.getLayer(conv8).blobs = [np.full([1, 313], 2.606, dtype=np.float32)]
-
-                scaled = img_enhanced.astype(np.float32) / 255.0
-                lab_scaled = cv2.cvtColor(scaled, cv2.COLOR_BGR2LAB)
-                resized = cv2.resize(lab_scaled, (224, 224))
-                L = cv2.split(resized)[0]
-                L -= 50
-
-                net.setInput(cv2.dnn.blobFromImage(L))
-                ab = net.forward()[0, :, :, :].transpose((1, 2, 0))
-                ab = cv2.resize(ab, (img_enhanced.shape[1], img_enhanced.shape[0]))
-
-                L_orig = cv2.split(lab_scaled)[0]
-                colorized = np.concatenate((L_orig[:, :, np.newaxis], ab), axis=2)
-                colorized = cv2.cvtColor(colorized, cv2.COLOR_LAB2BGR)
-                colorized = np.clip(colorized, 0, 1)
-                img_colored = (colorized * 255).astype(np.uint8)
+                # Preprocess for DeOldify
+                gray = cv2.cvtColor(img_enhanced, cv2.COLOR_BGR2GRAY)
+                gray_rgb = cv2.cvtColor(gray, cv2.COLOR_GRAY2RGB)
+                h, w = gray_rgb.shape[:2]
+                
+                # DeOldify usually uses 256 for Artistic
+                r_factor = 256
+                resized = cv2.resize(gray_rgb, (r_factor, r_factor))
+                inp = resized.astype(np.float32).transpose((2, 0, 1))
+                inp = np.expand_dims(inp, axis=0)
+                
+                # Inference
+                input_name = self.deoldify_session.get_inputs()[0].name
+                out = self.deoldify_session.run(None, {input_name: inp})[0][0]
+                
+                # Postprocess
+                colorized = out.transpose(1, 2, 0)
+                colorized = cv2.cvtColor(colorized, cv2.COLOR_BGR2RGB).astype(np.uint8)
+                colorized = cv2.resize(colorized, (w, h))
+                colorized = cv2.GaussianBlur(colorized, (13, 13), 0)
+                
+                # Merge original luminance with predicted AB
+                colorized_lab = cv2.cvtColor(colorized, cv2.COLOR_BGR2LAB)
+                _, A, B = cv2.split(colorized_lab)
+                colorized_merged = cv2.merge((targetL, A, B))
+                img_colored = cv2.cvtColor(colorized_merged, cv2.COLOR_LAB2BGR)
+                print("DeOldify colorization successful.")
+                
             except Exception as e:
                 print(f"Colorization failed: {e}")
                 img_colored = cv2.applyColorMap(cv2.cvtColor(img_enhanced, cv2.COLOR_BGR2GRAY), cv2.COLORMAP_BONE)

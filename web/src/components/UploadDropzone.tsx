@@ -35,7 +35,7 @@ export function UploadDropzone({ onUpload }: { onUpload: (file: File) => void })
         id="fileInput" 
         type="file" 
         className="hidden" 
-        accept="image/*"
+        accept="image/png, image/jpeg, image/webp, image/avif, image/heic"
         onChange={(e) => e.target.files && onUpload(e.target.files[0])}
       />
       <div className="flex flex-col items-center justify-center pointer-events-none">
