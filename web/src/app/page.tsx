@@ -33,7 +33,7 @@ export default function Home() {
     formData.append("denoise_strength", denoiseStrength.toString());
 
     try {
-      const res = await fetch("http://localhost:8000/api/v1/upload", {
+      const res = await fetch("/api/v1/upload", {
         method: "POST",
         body: formData,
       });
@@ -54,7 +54,7 @@ export default function Home() {
   const pollStatus = async (id: string) => {
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`http://localhost:8000/api/v1/status/${id}`);
+        const res = await fetch(`/api/v1/status/${id}`);
         const data = await res.json();
         
         setProgress(data.progress * 100);
@@ -63,7 +63,7 @@ export default function Home() {
         if (data.status === "completed") {
           clearInterval(interval);
           setStatus("completed");
-          setResultUrl(`http://localhost:8000/api/v1/download/${id}`);
+          setResultUrl(`/api/v1/download/${id}`);
         } else if (data.status === "failed") {
           clearInterval(interval);
           setStatus("error");

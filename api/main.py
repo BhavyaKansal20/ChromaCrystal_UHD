@@ -5,6 +5,7 @@ import asyncio
 import datetime
 from fastapi import FastAPI, UploadFile, File, Form, Depends, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import inspect, text
@@ -263,3 +264,7 @@ def download_image(job_id: str, db: Session = Depends(database.get_db)):
         raise HTTPException(status_code=404, detail="File missing on disk")
         
     return FileResponse(output_path, media_type="image/jpeg", filename=f"ChromaCrystal_{job.original_filename}")
+
+# Mount static frontend
+os.makedirs("public", exist_ok=True)
+app.mount("/", StaticFiles(directory="public", html=True), name="static")
