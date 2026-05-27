@@ -56,10 +56,10 @@ class ChromaCrystalPipeline:
         try:
             self.face_enhancer = GFPGANer(
                 model_path='weights/GFPGANv1.4.pth',
-                upscale=2,
+                upscale=1,
                 arch='clean',
                 channel_multiplier=2,
-                bg_upsampler=self.upscaler
+                bg_upsampler=None
             )
         except Exception as e:
             print(f"Warning: Could not load GFPGAN: {e}")
@@ -125,31 +125,27 @@ class ChromaCrystalPipeline:
 
         if self.face_enhancer:
             try:
+                print("Running Face Enhancer...")
                 _, _, img_restored = self.face_enhancer.enhance(img_colored, has_aligned=False, only_center_face=False, paste_back=True)
-            except:
+            except Exception as e:
+                print(f"Face enhancer failed: {e}")
                 img_restored = img_colored
         else:
             img_restored = img_colored
             
         if progress_callback: progress_callback(0.7)
 
-        if self.upscaler and not self.face_enhancer:
+        if self.upscaler:
             try:
+                print("Running Real-ESRGAN Upscaler...")
                 img_upscaled, _ = self.upscaler.enhance(img_restored, outscale=upscale_factor)
-            except:
+            except Exception as e:
+                print(f"Upscaler failed: {e}")
                 h, w = img_restored.shape[:2]
                 img_upscaled = cv2.resize(img_restored, (int(w*upscale_factor), int(h*upscale_factor)), interpolation=cv2.INTER_CUBIC)
-        elif not self.upscaler and not self.face_enhancer:
+        else:
             h, w = img_restored.shape[:2]
             img_upscaled = cv2.resize(img_restored, (int(w*upscale_factor), int(h*upscale_factor)), interpolation=cv2.INTER_CUBIC)
-        else:
-            if self.face_enhancer:
-                # GFPGAN defaults to 2x. We need to resize to match the requested upscale_factor relative to the original image.
-                orig_h, orig_w = img_colored.shape[:2]
-                target_w, target_h = int(orig_w * upscale_factor), int(orig_h * upscale_factor)
-                img_upscaled = cv2.resize(img_restored, (target_w, target_h), interpolation=cv2.INTER_CUBIC)
-            else:
-                img_upscaled = img_restored
 
         if progress_callback: progress_callback(0.9)
 
