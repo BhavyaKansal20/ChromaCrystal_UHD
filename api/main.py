@@ -92,6 +92,7 @@ async def heartbeat_sweeper():
 async def startup_event():
     asyncio.create_task(heartbeat_sweeper())
     print("Zero-Crash ThreadPool Architecture Started!")
+    pipeline.load_models()
 
 @app.post("/api/v1/upload")
 async def upload_image(
