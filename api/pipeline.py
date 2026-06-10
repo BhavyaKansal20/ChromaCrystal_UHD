@@ -57,7 +57,8 @@ class ChromaCrystalPipeline:
         
         try:
             onnx_path = 'weights/deoldify.onnx'
-            int8_path = 'weights/deoldify_int8.onnx'
+            # Save the compressed file to /tmp/ because HF root is Read-Only!
+            int8_path = '/tmp/deoldify_int8.onnx'
             
             # Dynamically Quantize the model from 32-bit Float to 8-bit Integer!
             if not os.path.exists(int8_path) and os.path.exists(onnx_path):
@@ -69,7 +70,11 @@ class ChromaCrystalPipeline:
             load_path = int8_path if os.path.exists(int8_path) else onnx_path
             self.deoldify_session = onnxruntime.InferenceSession(load_path, sess_options=session_options, providers=providers)
         except Exception as e:
-            print(f"Warning: DeOldify ONNX failed to load: {e}")
+            print(f"Warning: DeOldify ONNX failed to load (Falling back to raw ONNX if possible): {e}")
+            try:
+                self.deoldify_session = onnxruntime.InferenceSession('weights/deoldify.onnx', sess_options=session_options, providers=providers)
+            except Exception as e2:
+                print(f"Critical: DeOldify completely failed: {e2}")
 
         # 2. GFPGAN (PyTorch JIT Compilation)
         try:
@@ -81,9 +86,12 @@ class ChromaCrystalPipeline:
                 bg_upsampler=None
             )
             # Compile to raw C++ byte-code
-            if hasattr(torch, 'compile'):
-                print("TurboQuant: Compiling GFPGAN into C++ byte-code...")
-                self.face_enhancer.gfpgan = torch.compile(self.face_enhancer.gfpgan, mode="reduce-overhead")
+            try:
+                if hasattr(torch, 'compile'):
+                    print("TurboQuant: Compiling GFPGAN into C++ byte-code...")
+                    self.face_enhancer.gfpgan = torch.compile(self.face_enhancer.gfpgan)
+            except Exception as compile_err:
+                print(f"TurboQuant: PyTorch compile failed (ignoring): {compile_err}")
         except Exception as e:
             print(f"Warning: GFPGAN failed to load: {e}")
 
@@ -102,9 +110,12 @@ class ChromaCrystalPipeline:
                 gpu_id=None if device == 'cpu' else 0
             )
             # Compile to raw C++ byte-code
-            if hasattr(torch, 'compile'):
-                print("TurboQuant: Compiling RealESRGAN into C++ byte-code...")
-                self.upscaler.model = torch.compile(self.upscaler.model, mode="reduce-overhead")
+            try:
+                if hasattr(torch, 'compile'):
+                    print("TurboQuant: Compiling RealESRGAN into C++ byte-code...")
+                    self.upscaler.model = torch.compile(self.upscaler.model)
+            except Exception as compile_err:
+                print(f"TurboQuant: PyTorch compile failed (ignoring): {compile_err}")
         except Exception as e:
             print(f"Warning: RealESRGAN failed to load: {e}")
             
