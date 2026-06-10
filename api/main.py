@@ -53,6 +53,15 @@ def run_migrations():
             if 'denoise_strength' not in columns:
                 conn.execute(text("ALTER TABLE image_jobs ADD COLUMN denoise_strength INTEGER DEFAULT 10"))
                 modified = True
+            if 'enable_colorization' not in columns:
+                conn.execute(text("ALTER TABLE image_jobs ADD COLUMN enable_colorization BOOLEAN DEFAULT 1"))
+                modified = True
+            if 'enable_face_restoration' not in columns:
+                conn.execute(text("ALTER TABLE image_jobs ADD COLUMN enable_face_restoration BOOLEAN DEFAULT 1"))
+                modified = True
+            if 'enable_upscaling' not in columns:
+                conn.execute(text("ALTER TABLE image_jobs ADD COLUMN enable_upscaling BOOLEAN DEFAULT 1"))
+                modified = True
             
             if modified:
                 transaction.commit()
@@ -70,7 +79,7 @@ async def queue_worker():
     while True:
         try:
             job_item = await job_queue.get()
-            job_id, input_path, output_path, upscale_factor, color_intensity, denoise_strength = job_item
+            job_id, input_path, output_path, upscale_factor, color_intensity, denoise_strength, enable_colorization, enable_face_restoration, enable_upscaling = job_item
             print(f"Queue Worker: Processing job {job_id}...")
             
             db = database.SessionLocal()
@@ -102,7 +111,10 @@ async def queue_worker():
                     update_progress,
                     upscale_factor,
                     color_intensity,
-                    denoise_strength
+                    denoise_strength,
+                    enable_colorization,
+                    enable_face_restoration,
+                    enable_upscaling
                 )
                 
                 # Mark as completed
@@ -164,7 +176,10 @@ async def startup_event():
                     output_path,
                     job.upscale_factor or 4,
                     job.color_intensity or 1.0,
-                    job.denoise_strength or 10
+                    job.denoise_strength or 10,
+                    job.enable_colorization,
+                    job.enable_face_restoration,
+                    job.enable_upscaling
                 ))
     except Exception as e:
         print(f"Startup Recovery: Failed to recover jobs: {e}")
@@ -177,6 +192,9 @@ async def upload_image(
     upscale_factor: int = Form(4),
     color_intensity: float = Form(1.0),
     denoise_strength: int = Form(10),
+    enable_colorization: bool = Form(True),
+    enable_face_restoration: bool = Form(True),
+    enable_upscaling: bool = Form(True),
     db: Session = Depends(database.get_db)
 ):
     job_id = str(uuid.uuid4())
@@ -200,6 +218,9 @@ async def upload_image(
         upscale_factor=upscale_factor,
         color_intensity=color_intensity,
         denoise_strength=denoise_strength,
+        enable_colorization=enable_colorization,
+        enable_face_restoration=enable_face_restoration,
+        enable_upscaling=enable_upscaling,
         status="pending",
         progress=0.0
     )
@@ -214,7 +235,10 @@ async def upload_image(
         output_path,
         upscale_factor,
         color_intensity,
-        denoise_strength
+        denoise_strength,
+        enable_colorization,
+        enable_face_restoration,
+        enable_upscaling
     ))
     
     return {"job_id": job_id, "status": "pending"}

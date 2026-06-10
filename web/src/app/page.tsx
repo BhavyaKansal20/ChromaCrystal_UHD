@@ -17,6 +17,9 @@ export default function Home() {
   const [upscaleFactor, setUpscaleFactor] = useState<number>(4);
   const [colorIntensity, setColorIntensity] = useState<number>(1.0);
   const [denoiseStrength, setDenoiseStrength] = useState<number>(10);
+  const [enableColorization, setEnableColorization] = useState<boolean>(true);
+  const [enableFaceRestoration, setEnableFaceRestoration] = useState<boolean>(true);
+  const [enableUpscaling, setEnableUpscaling] = useState<boolean>(true);
   const [showSettings, setShowSettings] = useState<boolean>(false);
 
   const handleUpload = async (selectedFile: File) => {
@@ -31,6 +34,9 @@ export default function Home() {
     formData.append("upscale_factor", upscaleFactor.toString());
     formData.append("color_intensity", colorIntensity.toString());
     formData.append("denoise_strength", denoiseStrength.toString());
+    formData.append("enable_colorization", enableColorization.toString());
+    formData.append("enable_face_restoration", enableFaceRestoration.toString());
+    formData.append("enable_upscaling", enableUpscaling.toString());
 
     try {
       const res = await fetch("/api/v1/upload", {
@@ -114,6 +120,26 @@ export default function Home() {
                   animate={{ opacity: 1, height: "auto" }}
                   className="bg-gray-900/50 rounded-xl p-6 border border-gray-800"
                 >
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 pb-8 border-b border-gray-800">
+                    <label className="flex items-center justify-between cursor-pointer group">
+                      <span className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Colorize (DeOldify)</span>
+                      <input type="checkbox" checked={enableColorization} onChange={(e) => setEnableColorization(e.target.checked)} className="sr-only peer" />
+                      <div className="relative w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-blue glow-border shadow-none peer-checked:shadow-[0_0_10px_rgba(0,240,255,0.5)]"></div>
+                    </label>
+
+                    <label className="flex items-center justify-between cursor-pointer group">
+                      <span className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Restore Faces (GFPGAN)</span>
+                      <input type="checkbox" checked={enableFaceRestoration} onChange={(e) => setEnableFaceRestoration(e.target.checked)} className="sr-only peer" />
+                      <div className="relative w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-purple glow-border shadow-none peer-checked:shadow-[0_0_10px_rgba(157,0,255,0.5)]"></div>
+                    </label>
+
+                    <label className="flex items-center justify-between cursor-pointer group">
+                      <span className="text-sm font-medium text-gray-300 group-hover:text-white transition-colors">Ultra-HD Upscale</span>
+                      <input type="checkbox" checked={enableUpscaling} onChange={(e) => setEnableUpscaling(e.target.checked)} className="sr-only peer" />
+                      <div className="relative w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-neon-blue glow-border shadow-none peer-checked:shadow-[0_0_10px_rgba(0,240,255,0.5)]"></div>
+                    </label>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {/* Upscale */}
                     <div className="flex flex-col gap-3">

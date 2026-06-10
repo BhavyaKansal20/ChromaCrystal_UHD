@@ -27,7 +27,7 @@ class ChromaCrystalPipeline:
         # Models are no longer loaded into the main process to prevent OOM
         self.models_loaded = True
 
-    def process_image(self, input_path: str, output_path: str, progress_callback=None, upscale_factor=4, color_intensity=1.0, denoise_strength=10):
+    def process_image(self, input_path: str, output_path: str, progress_callback=None, upscale_factor=4, color_intensity=1.0, denoise_strength=10, cancel_check=None, enable_colorization=True, enable_face_restoration=True, enable_upscaling=True):
         self.load_models()
         if progress_callback: progress_callback(0.1)
 
@@ -53,38 +53,42 @@ class ChromaCrystalPipeline:
         img_enhanced = cv2.cvtColor(limg, cv2.COLOR_LAB2BGR)
         if progress_callback: progress_callback(0.3)
         
-        try:
-            import subprocess
-            import uuid
-            
-            print("Running DeOldify isolated in subprocess...")
-            temp_in = f"temp_in_{uuid.uuid4().hex}.jpg"
-            temp_out = f"temp_out_{uuid.uuid4().hex}.jpg"
-            cv2.imwrite(temp_in, img_enhanced)
-            
-            result = subprocess.run([sys.executable, "deoldify_worker.py", temp_in, temp_out], capture_output=True)
-            
-            if result.returncode == 0 and os.path.exists(temp_out):
-                img_colored = cv2.imread(temp_out)
-                print("DeOldify colorization successful. Memory fully released.")
-            else:
-                print(f"Subprocess colorization failed: {result.stderr.decode('utf-8')}")
-                img_colored = cv2.applyColorMap(cv2.cvtColor(img_enhanced, cv2.COLOR_BGR2GRAY), cv2.COLORMAP_BONE)
+        if enable_colorization:
+            try:
+                import subprocess
+                import uuid
                 
-            if os.path.exists(temp_in): os.remove(temp_in)
-            if os.path.exists(temp_out): os.remove(temp_out)
+                print("Running DeOldify isolated in subprocess...")
+                temp_in = f"temp_in_{uuid.uuid4().hex}.jpg"
+                temp_out = f"temp_out_{uuid.uuid4().hex}.jpg"
+                cv2.imwrite(temp_in, img_enhanced)
+                
+                result = subprocess.run([sys.executable, "deoldify_worker.py", temp_in, temp_out], capture_output=True)
+                
+                if result.returncode == 0 and os.path.exists(temp_out):
+                    img_colored = cv2.imread(temp_out)
+                    print("DeOldify colorization successful. Memory fully released.")
+                else:
+                    print(f"Subprocess colorization failed: {result.stderr.decode('utf-8')}")
+                    img_colored = cv2.applyColorMap(cv2.cvtColor(img_enhanced, cv2.COLOR_BGR2GRAY), cv2.COLORMAP_BONE)
+                    
+                if os.path.exists(temp_in): os.remove(temp_in)
+                if os.path.exists(temp_out): os.remove(temp_out)
+                
+            except Exception as e:
+                print(f"Colorization failed: {e}")
+                img_colored = cv2.applyColorMap(cv2.cvtColor(img_enhanced, cv2.COLOR_BGR2GRAY), cv2.COLORMAP_BONE)
+        else:
+            print("Colorization disabled by user. Skipping DeOldify.")
+            img_colored = img_enhanced
             
-        except Exception as e:
-            print(f"Colorization failed: {e}")
-            img_colored = cv2.applyColorMap(cv2.cvtColor(img_enhanced, cv2.COLOR_BGR2GRAY), cv2.COLORMAP_BONE)
-            
-        if color_intensity != 1.0:
+        if enable_colorization and color_intensity != 1.0:
             hsv = cv2.cvtColor(img_colored, cv2.COLOR_BGR2HSV).astype(np.float32)
             hsv[:, :, 1] = np.clip(hsv[:, :, 1] * color_intensity, 0, 255)
             img_colored = cv2.cvtColor(hsv.astype(np.uint8), cv2.COLOR_HSV2BGR)
         if progress_callback: progress_callback(0.5)
 
-        if self.face_enhancer_enabled:
+        if enable_face_restoration:
             try:
                 import subprocess
                 import uuid
@@ -112,7 +116,7 @@ class ChromaCrystalPipeline:
             
         if progress_callback: progress_callback(0.7)
 
-        if self.upscaler_enabled:
+        if enable_upscaling:
             try:
                 import subprocess
                 import uuid

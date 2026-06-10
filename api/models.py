@@ -16,3 +16,8 @@ class ImageJob(Base):
     created_at = Column(DateTime, default=datetime.datetime.utcnow)
     completed_at = Column(DateTime, nullable=True)
     error_message = Column(String, nullable=True)
+    
+    # AI Pipeline Toggles
+    enable_colorization = Column(Boolean, default=True)
+    enable_face_restoration = Column(Boolean, default=True)
+    enable_upscaling = Column(Boolean, default=True)
