@@ -112,6 +112,7 @@ async def queue_worker():
                     upscale_factor,
                     color_intensity,
                     denoise_strength,
+                    None, # cancel_check
                     enable_colorization,
                     enable_face_restoration,
                     enable_upscaling
