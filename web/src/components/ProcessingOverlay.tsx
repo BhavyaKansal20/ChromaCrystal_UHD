@@ -22,8 +22,8 @@ export function ProcessingOverlay({
   const isQueued = status === "pending";
 
   return (
-    <div className="py-20 flex flex-col items-center justify-center text-center">
-      <div className="relative w-40 h-40 mb-12">
+    <div className="py-10 md:py-20 flex flex-col items-center justify-center text-center">
+      <div className="relative w-32 h-32 md:w-40 md:h-40 mb-8 md:mb-12">
         <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
           <circle
             cx="50"
@@ -76,7 +76,7 @@ export function ProcessingOverlay({
         key={isQueued ? `queue-${queuePosition}` : currentStep}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-2xl font-light tracking-wide text-neon-blue h-8"
+        className="text-lg md:text-2xl font-light tracking-wide text-neon-blue min-h-[3rem] md:h-8 px-4"
       >
         {isQueued ? (
           queuePosition === 0 ? (

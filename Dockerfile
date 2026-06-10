@@ -18,9 +18,10 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Python dependencies
+RUN pip install --upgrade pip setuptools wheel cython
 COPY api/requirements.txt .
-RUN pip install --no-cache-dir basicsr facexlib gfpgan realesrgan --no-build-isolation
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir basicsr facexlib gfpgan realesrgan
 RUN sed -i 's/from torchvision.transforms.functional_tensor import rgb_to_grayscale/from torchvision.transforms.functional import rgb_to_grayscale/g' /usr/local/lib/python3.10/site-packages/basicsr/data/degradations.py
 
 # Copy API files
