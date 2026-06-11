@@ -23,14 +23,18 @@ export function ProcessingOverlay({
 
   return (
     <div className="py-10 md:py-20 flex flex-col items-center justify-center text-center">
-      <div className="relative w-32 h-32 md:w-40 md:h-40 mb-8 md:mb-12">
-        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+      <div className="relative w-40 h-40 md:w-56 md:h-56 mb-8 md:mb-12">
+        {/* Sci-fi Pulse Background */}
+        <div className="absolute inset-0 bg-purple-500/20 rounded-full blur-xl animate-pulse" />
+        <div className="absolute inset-4 bg-blue-500/20 rounded-full blur-md animate-ping" style={{ animationDuration: '3s' }} />
+        
+        <svg className="relative z-10 w-full h-full transform -rotate-90 drop-shadow-[0_0_15px_rgba(139,92,246,0.8)]" viewBox="0 0 100 100">
           <circle
             cx="50"
             cy="50"
             r="45"
-            fill="none"
-            stroke="rgba(255,255,255,0.1)"
+            fill="rgba(10,10,25,0.8)"
+            stroke="rgba(255,255,255,0.05)"
             strokeWidth="2"
           />
           <motion.circle
@@ -53,8 +57,9 @@ export function ProcessingOverlay({
           />
           <defs>
             <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#00f0ff" />
-              <stop offset="100%" stopColor="#9d00ff" />
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#8b5cf6" />
+              <stop offset="100%" stopColor="#ec4899" />
             </linearGradient>
           </defs>
         </svg>

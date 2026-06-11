@@ -5,8 +5,10 @@ import { UploadDropzone } from "@/components/UploadDropzone";
 import { ProcessingOverlay } from "@/components/ProcessingOverlay";
 import { BeforeAfterSlider } from "@/components/BeforeAfterSlider";
 import { motion } from "framer-motion";
+import { useSession } from "@/context/AuthContext";
 
 export default function Home() {
+  const { data: session, status: authStatus, signIn } = useSession();
   const [file, setFile] = useState<File | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("idle"); // idle, pending, processing, completed, error
@@ -101,7 +103,31 @@ export default function Home() {
       </motion.div>
 
       <div className="w-full max-w-4xl glass-card rounded-2xl p-8 relative overflow-hidden">
-        {status === "idle" && (
+        {authStatus === "loading" ? (
+          <div className="flex justify-center py-20">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-neon-blue"></div>
+          </div>
+        ) : !session ? (
+          <div className="flex flex-col items-center py-10 gap-6">
+            <div className="p-4 rounded-full bg-purple-500/10 border border-purple-500/20 mb-4">
+              <svg className="w-12 h-12 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold text-white">Authentication Required</h2>
+            <p className="text-gray-400 text-center max-w-md">
+              Please sign in with your Google or GitHub account to access the Factory Assembly Line architecture.
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => signIn()}
+              className="mt-4 px-8 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold neon-border transition-all"
+            >
+              Get Started Now
+            </motion.button>
+          </div>
+        ) : status === "idle" && (
           <div className="flex flex-col gap-6">
             <UploadDropzone onUpload={handleUpload} />
             
