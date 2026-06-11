@@ -82,8 +82,8 @@ async def heartbeat_sweeper():
         current_time = time.time()
         for j_id, j_data in list(jobs.items()):
             if j_data["status"] in ["pending", "processing"]:
-                # If no status ping in 15 seconds, assume browser closed
-                if current_time - j_data.get("last_pinged", current_time) > 15:
+                # If no status ping in 60 seconds, assume browser closed
+                if current_time - j_data.get("last_pinged", current_time) > 60:
                     print(f"Sweeper: Job {j_id} lost heartbeat. Canceling!")
                     j_data["cancel_flag"] = True
                     j_data["status"] = "failed"
@@ -161,7 +161,7 @@ async def upload_image(
     return {"job_id": job_id, "status": "pending"}
 
 @app.get("/api/v1/status/{job_id}")
-def get_status(job_id: str):
+async def get_status(job_id: str):
     if job_id not in jobs:
         raise HTTPException(status_code=404, detail="Job not found")
         
@@ -189,7 +189,7 @@ def get_status(job_id: str):
     }
 
 @app.get("/api/v1/download/{job_id}")
-def download_image(job_id: str):
+async def download_image(job_id: str):
     if job_id not in jobs or jobs[job_id]["status"] != "completed":
         raise HTTPException(status_code=404, detail="Processed image not ready or found")
     
