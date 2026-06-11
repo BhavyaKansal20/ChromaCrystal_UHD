@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useSession } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
@@ -23,6 +24,13 @@ export default function Home() {
   const { data: session, setShowAuthModal } = useSession();
   const router = useRouter();
 
+  // Redirect to restore dashboard if session becomes active
+  useEffect(() => {
+    if (session) {
+      router.push("/restore");
+    }
+  }, [session, router]);
+
   const handleCTA = () => {
     if (session) {
       router.push("/restore");
@@ -30,6 +38,7 @@ export default function Home() {
       setShowAuthModal(true);
     }
   };
+
 
   return (
     <div className="flex flex-col w-full">
