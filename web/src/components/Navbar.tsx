@@ -67,7 +67,7 @@ export default function Navbar() {
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                onClick={() => signIn()}
+                onClick={() => signIn("google")}
                 className="hidden sm:flex items-center gap-1.5 px-4 py-2 text-sm font-medium btn-primary rounded-lg"
               >
                 <LogIn className="h-3.5 w-3.5" />
@@ -121,7 +121,7 @@ export default function Navbar() {
                   </div>
                 ) : (
                   <button
-                    onClick={() => { signIn(); setMobileOpen(false); }}
+                    onClick={() => { signIn("google"); setMobileOpen(false); }}
                     className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium btn-primary rounded-lg"
                   >
                     <LogIn className="h-4 w-4" />
