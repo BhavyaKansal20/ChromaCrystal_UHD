@@ -30,10 +30,10 @@ os.makedirs(PROCESSED_DIR, exist_ok=True)
 jobs = {}
 
 # Ephemeral ThreadPool for Zero-Crash Memory Isolation
-# Limit to 3 concurrent users so the 16GB CPU RAM doesn't crash!
-executor = concurrent.futures.ThreadPoolExecutor(max_workers=3)
+# Increased to 5 concurrent users! The Hyper-Speed mode uses far less RAM.
+executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
 
-def process_wrapper(job_id, input_path, output_path, upscale_factor, color_intensity, denoise_strength, enable_colorization, enable_face_restoration, enable_upscaling):
+def process_wrapper(job_id, input_path, output_path, upscale_factor, color_intensity, denoise_strength, enable_colorization, enable_face_restoration, enable_upscaling, active_users):
     print(f"ThreadPool: Processing job {job_id}...")
     try:
         # Mark as processing (might have been pending if thread pool was full)
@@ -59,7 +59,8 @@ def process_wrapper(job_id, input_path, output_path, upscale_factor, color_inten
             cancel_check=None,
             enable_colorization=enable_colorization,
             enable_face_restoration=enable_face_restoration,
-            enable_upscaling=enable_upscaling
+            enable_upscaling=enable_upscaling,
+            active_users=active_users
         )
         
         if job_id in jobs:
@@ -137,6 +138,9 @@ async def upload_image(
         "cancel_flag": False
     }
     
+    # DYNAMIC BRAIN SENSOR: Count active traffic!
+    active_users = sum(1 for j in jobs.values() if j["status"] in ["pending", "processing"])
+    
     # Launch job immediately in thread pool
     loop = asyncio.get_running_loop()
     loop.run_in_executor(
@@ -150,7 +154,8 @@ async def upload_image(
         denoise_strength,
         enable_colorization,
         enable_face_restoration,
-        enable_upscaling
+        enable_upscaling,
+        active_users
     )
     
     return {"job_id": job_id, "status": "pending"}

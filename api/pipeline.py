@@ -122,9 +122,22 @@ class ChromaCrystalPipeline:
         self.models_loaded = True
         print("All models successfully locked into RAM!")
 
-    def process_image(self, input_path: str, output_path: str, progress_callback=None, upscale_factor=4, color_intensity=1.0, denoise_strength=10, cancel_check=None, enable_colorization=True, enable_face_restoration=True, enable_upscaling=True):
+    def process_image(self, input_path: str, output_path: str, progress_callback=None, upscale_factor=4, color_intensity=1.0, denoise_strength=10, cancel_check=None, enable_colorization=True, enable_face_restoration=True, enable_upscaling=True, active_users=1):
         self.load_models()
         if progress_callback: progress_callback(0.1)
+        
+        # DYNAMIC LOAD SHEDDING BRAIN 🧠
+        is_hyper_speed = active_users >= 3
+        if is_hyper_speed:
+            print(f"🚨 HYPER-SPEED MODE ACTIVATED! (Active Users: {active_users})")
+            max_edge = 256
+            deoldify_r_factor = 128
+            enable_heavy_upscaler = False
+        else:
+            print(f"✅ NORMAL MODE (Active Users: {active_users})")
+            max_edge = 400
+            deoldify_r_factor = 256
+            enable_heavy_upscaler = enable_upscaling
 
         try:
             pil_img = Image.open(input_path).convert('RGB')
@@ -136,8 +149,7 @@ class ChromaCrystalPipeline:
         if img is None:
             raise ValueError("Invalid image file")
             
-        # AGGRESSIVE PRE-SCALER: Force CPU to calculate much fewer pixels
-        max_edge = 400
+        # AGGRESSIVE PRE-SCALER: Dynamically throttled by load
         h, w = img.shape[:2]
         if max(h, w) > max_edge:
             scale = max_edge / max(h, w)
@@ -164,8 +176,8 @@ class ChromaCrystalPipeline:
                 gray_rgb = cv2.cvtColor(gray, cv2.COLOR_GRAY2RGB)
                 ih, iw = gray_rgb.shape[:2]
                 
-                # Dropped render factor from 21 down to 14 (256px) for extreme CPU speed
-                r_factor = 256
+                # Render factor dynamically controlled by Traffic Sensor
+                r_factor = deoldify_r_factor
                 resized = cv2.resize(gray_rgb, (r_factor, r_factor))
                 inp = resized.astype(np.float32).transpose((2, 0, 1))
                 inp = np.expand_dims(inp, axis=0)
@@ -205,21 +217,32 @@ class ChromaCrystalPipeline:
             
         if progress_callback: progress_callback(0.7)
 
-        # AI 3: Ultra-HD Upscaling (Real-ESRGAN)
-        if enable_upscaling and self.upscaler:
+        # AI 3: Ultra-HD Upscaling (Real-ESRGAN or Classical Fallback)
+        if enable_heavy_upscaler and self.upscaler:
             try:
                 img_upscaled, _ = self.upscaler.enhance(img_restored, outscale=upscale_factor)
             except Exception as e:
                 print(f"Upscaler failed: {e}")
                 ih, iw = img_restored.shape[:2]
                 img_upscaled = cv2.resize(img_restored, (int(iw*upscale_factor), int(ih*upscale_factor)), interpolation=cv2.INTER_CUBIC)
+        elif enable_upscaling:
+            # HYPER-SPEED MODE: Bypass AI, use lightning-fast C++ OpenCV interpolation
+            print("TurboQuant: Heavy Upscaler bypassed! Using Lightning Fast Classical Upscaler!")
+            ih, iw = img_restored.shape[:2]
+            img_upscaled = cv2.resize(img_restored, (int(iw*upscale_factor), int(ih*upscale_factor)), interpolation=cv2.INTER_CUBIC)
+            # Add Unsharp Mask to simulate AI detailing in 0.05 seconds!
+            img_upscaled = cv2.detailEnhance(img_upscaled, sigma_s=10, sigma_r=0.15)
         else:
             ih, iw = img_restored.shape[:2]
             img_upscaled = cv2.resize(img_restored, (int(iw*upscale_factor), int(ih*upscale_factor)), interpolation=cv2.INTER_CUBIC)
 
         if progress_callback: progress_callback(0.9)
 
-        img_final = cv2.detailEnhance(img_upscaled, sigma_s=10, sigma_r=0.15)
+        # Ensure final detail enhancement isn't redundantly applied if we already did it in Hyper-Speed
+        if enable_heavy_upscaler:
+            img_final = cv2.detailEnhance(img_upscaled, sigma_s=10, sigma_r=0.15)
+        else:
+            img_final = img_upscaled
         cv2.imwrite(output_path, img_final)
         
         # Free memory immediately
