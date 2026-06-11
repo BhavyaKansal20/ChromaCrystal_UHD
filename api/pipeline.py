@@ -7,16 +7,15 @@ import torch
 import gc
 
 # ---------------------------------------------------------
-# EXTREME CPU OPTIMIZATION: Thread Thrashing Prevention
-# Prevent 5 concurrent users from causing CPU lockup
+# CPU OPTIMIZATION: Thread Safety
 # ---------------------------------------------------------
-os.environ["OMP_NUM_THREADS"] = "1"
-os.environ["OPENBLAS_NUM_THREADS"] = "1"
-os.environ["MKL_NUM_THREADS"] = "1"
-os.environ["VECLIB_MAXIMUM_THREADS"] = "1"
-os.environ["NUMEXPR_NUM_THREADS"] = "1"
-cv2.setNumThreads(1)
-torch.set_num_threads(1)
+os.environ["OMP_NUM_THREADS"] = "2"
+os.environ["OPENBLAS_NUM_THREADS"] = "2"
+os.environ["MKL_NUM_THREADS"] = "2"
+os.environ["VECLIB_MAXIMUM_THREADS"] = "2"
+os.environ["NUMEXPR_NUM_THREADS"] = "2"
+cv2.setNumThreads(2)
+torch.set_num_threads(2)
 import gc
 
 try:
@@ -76,7 +75,7 @@ class ChromaCrystalPipeline:
             except Exception as e2:
                 print(f"Critical: DeOldify completely failed: {e2}")
 
-        # 2. GFPGAN (PyTorch JIT Compilation)
+        # 2. GFPGAN
         try:
             self.face_enhancer = GFPGANer(
                 model_path='weights/GFPGANv1.4.pth',
@@ -85,17 +84,10 @@ class ChromaCrystalPipeline:
                 channel_multiplier=2,
                 bg_upsampler=None
             )
-            # Compile to raw C++ byte-code
-            try:
-                if hasattr(torch, 'compile'):
-                    print("TurboQuant: Compiling GFPGAN into C++ byte-code...")
-                    self.face_enhancer.gfpgan = torch.compile(self.face_enhancer.gfpgan)
-            except Exception as compile_err:
-                print(f"TurboQuant: PyTorch compile failed (ignoring): {compile_err}")
         except Exception as e:
             print(f"Warning: GFPGAN failed to load: {e}")
 
-        # 3. RealESRGAN (PyTorch JIT Compilation)
+        # 3. RealESRGAN
         try:
             model = RRDBNet(num_in_ch=3, num_out_ch=3, num_feat=64, num_block=23, num_grow_ch=32, scale=4)
             self.upscaler = RealESRGANer(
@@ -109,13 +101,6 @@ class ChromaCrystalPipeline:
                 half=False,
                 gpu_id=None if device == 'cpu' else 0
             )
-            # Compile to raw C++ byte-code
-            try:
-                if hasattr(torch, 'compile'):
-                    print("TurboQuant: Compiling RealESRGAN into C++ byte-code...")
-                    self.upscaler.model = torch.compile(self.upscaler.model)
-            except Exception as compile_err:
-                print(f"TurboQuant: PyTorch compile failed (ignoring): {compile_err}")
         except Exception as e:
             print(f"Warning: RealESRGAN failed to load: {e}")
             
