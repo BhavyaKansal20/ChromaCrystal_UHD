@@ -3,6 +3,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import HtmlRedirect from "@/components/HtmlRedirect";
 
 export const metadata: Metadata = {
   title: "ChromaCrystal UHD | AI-Powered Photo Restoration",
@@ -28,6 +29,7 @@ export default function RootLayout({
         </div>
 
         <AuthProvider>
+          <HtmlRedirect />
           <div className="relative z-10 flex flex-col min-h-screen">
             <Navbar />
             <main className="flex-1">
@@ -40,3 +42,4 @@ export default function RootLayout({
     </html>
   );
 }
+
