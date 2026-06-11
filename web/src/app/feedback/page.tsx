@@ -2,31 +2,45 @@
 
 import { useState, FormEvent } from "react";
 import Link from "next/link";
+import { useSession } from "@/context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Star, Send, CheckCircle, Loader2 } from "lucide-react";
 
 const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbzJRMguV_tan7GbxBkC0fjOYjpCEpjFz0IDxJyX4wiuJRtLSOZwXvVn8SDLTnN10-s8sw/exec";
 
-const inputClasses = "w-full bg-white/[0.05] border border-white/[0.1] rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 outline-none transition-all duration-200";
-
 export default function FeedbackPage() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
+  const { data: session } = useSession();
+  const [name, setName] = useState(session?.user?.name || "");
+  const [feature, setFeature] = useState<string>("✨ All Features");
   const [rating, setRating] = useState(0);
   const [hoveredStar, setHoveredStar] = useState(0);
-  const [feedback, setFeedback] = useState("");
+  const [helpful, setHelpful] = useState<string | null>("Yes");
+  const [message, setMessage] = useState("");
+  const [getReports, setGetReports] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+
+  const featuresList = [
+    { label: "Colorization", icon: "🎨" },
+    { label: "Face Restore", icon: "👤" },
+    { label: "4K Upscale", icon: "⚡" },
+    { label: "All Features", icon: "✨" },
+  ];
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+
+    const userEmail = session?.user?.email || "anonymous@chromacrystal.com";
+    const feedbackText = `Feature: ${feature} | Helpful: ${helpful} | Get Reports: ${getReports} | Message: ${message}`;
+
     try {
       const formData = new URLSearchParams();
-      formData.append("name", name);
-      formData.append("email", email);
+      formData.append("name", name || "Anonymous User");
+      formData.append("email", userEmail);
       formData.append("rating", rating.toString());
-      formData.append("feedback", feedback);
+      formData.append("feedback", feedbackText);
+
       await fetch(GOOGLE_SHEETS_URL, {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -34,90 +48,222 @@ export default function FeedbackPage() {
         mode: "no-cors",
       });
       setIsSubmitted(true);
-    } catch {
-      setIsSubmitted(true);
+    } catch (err) {
+      console.error(err);
+      setIsSubmitted(true); // Standard mode: no-cors resolves as opaque, treat as submitted
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleReset = () => {
-    setName(""); setEmail(""); setRating(0); setHoveredStar(0); setFeedback(""); setIsSubmitted(false);
+    setName(session?.user?.name || "");
+    setFeature("✨ All Features");
+    setRating(0);
+    setHoveredStar(0);
+    setHelpful("Yes");
+    setMessage("");
+    setGetReports(false);
+    setIsSubmitted(false);
   };
 
   return (
-    <div className="min-h-screen px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-2xl">
-        <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4 }}>
-          <Link href="/" className="group mb-8 inline-flex items-center gap-2 text-sm text-gray-400 transition-colors hover:text-purple-400">
-            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
-            Back to Home
+    <div className="min-h-[90vh] px-4 py-12 flex flex-col items-center justify-center">
+      <div className="w-full max-w-[480px]">
+        {/* Back navigation */}
+        <motion.div initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} className="mb-6">
+          <Link href="/" className="group inline-flex items-center gap-2 text-xs font-semibold text-gray-500 hover:text-purple-400 transition-colors">
+            <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-1" />
+            Back to home
           </Link>
         </motion.div>
 
-        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="bg-white/[0.03] backdrop-blur-xl border border-white/[0.08] rounded-2xl p-6 sm:p-10">
+        {/* Form Card */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-[#0b0820]/85 border border-white/[0.08] rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-2xl"
+        >
           <AnimatePresence mode="wait">
             {!isSubmitted ? (
-              <motion.div key="form" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.4 }}>
-                <div className="mb-8 text-center">
-                  <h1 className="bg-gradient-to-r from-purple-400 via-fuchsia-400 to-blue-400 bg-clip-text text-3xl font-bold tracking-tight text-transparent sm:text-4xl">Share Your Experience ✨</h1>
-                  <p className="mt-3 text-gray-400">Takes 30 seconds — helps us improve!</p>
+              <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+                {/* Header */}
+                <div>
+                  <div className="text-[10px] font-bold text-purple-400 tracking-wider uppercase mb-1">CHROMACRYSTAL UHD</div>
+                  <h1 className="text-2xl font-black text-white leading-tight">Share your experience ✨</h1>
+                  <p className="text-xs text-gray-500 mt-1">Takes 30 seconds — helps us improve!</p>
                 </div>
 
-                <div className="mb-8 h-px bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
+                <div className="h-px bg-white/[0.06]" />
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-                    <label htmlFor="name" className="mb-2 block text-sm font-medium text-gray-300">Name</label>
-                    <input type="text" id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" required className={inputClasses} />
-                  </motion.div>
+                {/* Name */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-gray-500 tracking-wider uppercase">Your Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Mr. Kansal"
+                    className="w-full bg-[#110e2e]/60 border border-white/[0.08] focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none transition-all"
+                  />
+                </div>
 
-                  <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-                    <label htmlFor="email" className="mb-2 block text-sm font-medium text-gray-300">Email</label>
-                    <input type="email" id="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required className={inputClasses} />
-                  </motion.div>
-
-                  <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-                    <label className="mb-3 block text-sm font-medium text-gray-300">Rating</label>
-                    <div className="flex items-center gap-2">
-                      {[1, 2, 3, 4, 5].map((star) => {
-                        const isActive = star <= (hoveredStar || rating);
-                        return (
-                          <button key={star} type="button" onClick={() => setRating(star)} onMouseEnter={() => setHoveredStar(star)} onMouseLeave={() => setHoveredStar(0)} className="group rounded-lg p-1 transition-transform duration-150 hover:scale-110 focus:outline-none">
-                            <Star className={`h-8 w-8 transition-all duration-200 ${isActive ? "fill-yellow-400 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.6)]" : "text-gray-600 group-hover:text-yellow-400/50"}`} />
-                          </button>
-                        );
-                      })}
-                      {rating > 0 && <span className="ml-2 text-sm text-gray-400">{rating}/5</span>}
-                    </div>
-                  </motion.div>
-
-                  <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
-                    <label htmlFor="feedback" className="mb-2 block text-sm font-medium text-gray-300">Feedback</label>
-                    <textarea id="feedback" value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder="Tell us what you loved, or what we can do better..." rows={4} required className={`${inputClasses} resize-none`} />
-                  </motion.div>
-
-                  <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-                    <button type="submit" disabled={isSubmitting || rating === 0} className="group relative w-full overflow-hidden rounded-xl border border-purple-500/30 bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-purple-500/20 transition-all duration-300 hover:shadow-purple-500/40 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50">
-                      <span className="relative flex items-center justify-center gap-2">
-                        {isSubmitting ? (<><Loader2 className="h-4 w-4 animate-spin" /> Submitting...</>) : (<><Send className="h-4 w-4" /> Submit Feedback</>)}
-                      </span>
-                    </button>
-                  </motion.div>
-                </form>
-              </motion.div>
-            ) : (
-              <motion.div key="success" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} transition={{ duration: 0.5 }} className="py-10 text-center">
-                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, damping: 12, delay: 0.2 }} className="mb-6 flex justify-center">
-                  <div className="rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20 p-5 ring-1 ring-green-400/30 shadow-[0_0_30px_rgba(34,197,94,0.2)]">
-                    <CheckCircle className="h-12 w-12 text-green-400" />
+                {/* Feature selector */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-bold text-gray-500 tracking-wider uppercase">What did you restore?</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {featuresList.map((f) => {
+                      const value = `${f.icon} ${f.label}`;
+                      const isSelected = feature === value;
+                      return (
+                        <button
+                          key={f.label}
+                          type="button"
+                          onClick={() => setFeature(value)}
+                          className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                            isSelected
+                              ? "bg-purple-500/10 border-purple-500/40 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.1)]"
+                              : "bg-[#110e2e]/40 border-white/[0.06] text-gray-400 hover:bg-white/[0.02] hover:text-white"
+                          }`}
+                        >
+                          <span>{f.icon}</span>
+                          <span>{f.label}</span>
+                        </button>
+                      );
+                    })}
                   </div>
-                </motion.div>
-                <motion.h2 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="mb-3 text-2xl font-bold text-white">Thank you!</motion.h2>
-                <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="mx-auto max-w-sm text-gray-400">Your feedback has been recorded. It means a lot and helps us build better! 💪</motion.p>
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.65 }} className="mt-8">
-                  <button onClick={handleReset} className="inline-flex items-center gap-2 rounded-xl border border-white/[0.1] bg-white/[0.05] px-6 py-3 text-sm font-medium text-gray-300 transition-all hover:border-purple-500/40 hover:bg-white/[0.08] hover:text-white">Submit Another</button>
-                </motion.div>
+                </div>
+
+                {/* Rating */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-bold text-gray-500 tracking-wider uppercase">Rate your experience</label>
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const isActive = star <= (hoveredStar || rating);
+                      return (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setRating(star)}
+                          onMouseEnter={() => setHoveredStar(star)}
+                          onMouseLeave={() => setHoveredStar(0)}
+                          className="p-1 hover:scale-110 transition-transform cursor-pointer"
+                        >
+                          <Star
+                            className={`h-7 w-7 transition-all ${
+                              isActive
+                                ? "fill-yellow-400 text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]"
+                                : "text-gray-700"
+                            }`}
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Helpful */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-bold text-gray-500 tracking-wider uppercase">Was this helpful?</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {["Yes", "No"].map((opt) => {
+                      const isSelected = helpful === opt;
+                      const icon = opt === "Yes" ? "👍" : "👎";
+                      return (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => setHelpful(opt)}
+                          className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                            isSelected
+                              ? "bg-purple-500/10 border-purple-500/40 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.1)]"
+                              : "bg-[#110e2e]/40 border-white/[0.06] text-gray-400 hover:bg-white/[0.02]"
+                          }`}
+                        >
+                          <span>{icon}</span>
+                          <span>{opt}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Message */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-gray-500 tracking-wider uppercase">Leave a message</label>
+                  <textarea
+                    rows={4}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="Tell us what you think, what can be improved..."
+                    className="w-full bg-[#110e2e]/60 border border-white/[0.08] focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none transition-all resize-none"
+                  />
+                </div>
+
+                {/* Checkbox */}
+                <label className="flex items-center gap-3 cursor-pointer group mt-1 select-none">
+                  <div className="relative flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={getReports}
+                      onChange={(e) => setGetReports(e.target.checked)}
+                      className="peer sr-only"
+                    />
+                    <div className="w-5 h-5 border border-white/[0.08] bg-[#110e2e]/60 rounded-md transition-all peer-checked:bg-purple-600 peer-checked:border-purple-500/40" />
+                    <svg className="absolute w-3.5 h-3.5 text-white scale-0 peer-checked:scale-100 transition-transform pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <span className="text-xs text-gray-400 group-hover:text-white transition-colors">
+                    Get predicted reports in reports section
+                  </span>
+                </label>
+
+                {/* Submit button */}
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  type="submit"
+                  disabled={isSubmitting || rating === 0}
+                  className="w-full mt-2 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 hover:brightness-110 text-white font-bold text-sm shadow-[0_0_20px_rgba(147,51,234,0.3)] border border-purple-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Submitting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Submit Feedback ✨</span>
+                    </>
+                  )}
+                </motion.button>
+              </form>
+            ) : (
+              <motion.div
+                key="success"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="py-8 text-center flex flex-col items-center gap-5"
+              >
+                <div className="rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20 p-5 ring-1 ring-green-400/30 shadow-[0_0_30px_rgba(34,197,94,0.2)]">
+                  <CheckCircle className="h-10 w-10 text-green-400 animate-bounce" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white mb-2">Feedback Recorded!</h2>
+                  <p className="text-xs text-gray-400 leading-relaxed max-w-xs mx-auto">
+                    Thank you for your valuable response. We will use it to optimize our GFPGAN and DeOldify processing sequences.
+                  </p>
+                </div>
+                <button
+                  onClick={handleReset}
+                  className="mt-2 btn-secondary px-6 py-2.5 rounded-xl text-xs font-semibold cursor-pointer"
+                >
+                  Submit Another response
+                </button>
               </motion.div>
             )}
           </AnimatePresence>
