@@ -124,9 +124,9 @@ class ChromaCrystalPipeline:
         is_hyper_speed = active_users >= 3
         if is_hyper_speed:
             print(f"🚨 HYPER-SPEED MODE ACTIVATED! (Active Users: {active_users})")
-            max_edge = 256
-            deoldify_r_factor = 128
-            enable_heavy_upscaler = False
+            max_edge = 400  # Restored from 256 to give GFPGAN high-res details
+            deoldify_r_factor = 256  # Restored from 128 to ensure perfect skin tone colorization
+            enable_heavy_upscaler = False # Bypassing ESRGAN still saves 10+ seconds!
         else:
             print(f"✅ NORMAL MODE (Active Users: {active_users})")
             max_edge = 400
