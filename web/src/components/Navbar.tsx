@@ -1,62 +1,138 @@
 "use client";
 
+import { useState } from "react";
+import Link from "next/link";
 import { useSession } from "@/context/AuthContext";
-import { motion } from "framer-motion";
-import { LogIn, LogOut, Zap } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Diamond, LogIn, LogOut, Menu, X } from "lucide-react";
 
 export default function Navbar() {
   const { data: session, signIn, signOut } = useSession();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const navLinks = [
+    { href: "/", label: "Home" },
+    { href: "/#features", label: "Features" },
+    { href: "/feedback", label: "Feedback" },
+    { href: "/privacy", label: "Privacy" },
+    { href: "/terms", label: "Terms" },
+  ];
 
   return (
-    <nav className="sticky top-0 z-50 w-full glass border-b border-white/5 shadow-[0_0_20px_rgba(139,92,246,0.1)]">
+    <nav className="sticky top-0 z-50 glass-nav">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex-shrink-0 flex items-center space-x-2">
-            <Zap className="h-6 w-6 text-purple-400" />
-            <span className="font-bold text-xl tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400 neon-text">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2 group">
+            <Diamond className="h-6 w-6 text-purple-400 group-hover:text-purple-300 transition-colors" />
+            <span className="text-lg font-bold gradient-text tracking-tight">
               ChromaCrystal UHD
             </span>
+          </Link>
+
+          {/* Desktop Nav Links */}
+          <div className="hidden md:flex items-center gap-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="px-3 py-2 text-sm text-gray-400 hover:text-white transition-colors rounded-lg hover:bg-white/[0.05]"
+              >
+                {link.label}
+              </Link>
+            ))}
           </div>
-          
-          <div className="flex items-center space-x-4">
+
+          {/* Auth + Mobile Toggle */}
+          <div className="flex items-center gap-3">
             {session ? (
-              <div className="flex items-center space-x-4">
-                <div className="hidden sm:flex items-center space-x-2">
-                  {session.user?.image && (
-                    <img
-                      className="h-8 w-8 rounded-full border border-purple-500/50"
-                      src={session.user.image}
-                      alt="User Avatar"
-                    />
-                  )}
-                  <span className="text-sm font-medium text-gray-200">
-                    {session.user?.name}
-                  </span>
-                </div>
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
+              <div className="hidden sm:flex items-center gap-3">
+                {session.user?.image && (
+                  <img
+                    className="h-8 w-8 rounded-full border border-purple-500/30"
+                    src={session.user.image}
+                    alt="Avatar"
+                  />
+                )}
+                <span className="text-sm text-gray-300 font-medium">{session.user?.name}</span>
+                <button
                   onClick={() => signOut()}
-                  className="flex items-center space-x-2 bg-white/5 hover:bg-white/10 text-white px-4 py-2 rounded-lg border border-white/10 transition-colors"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-400 hover:text-white rounded-lg border border-white/[0.08] hover:border-white/[0.15] hover:bg-white/[0.05] transition-all"
                 >
-                  <LogOut className="h-4 w-4" />
+                  <LogOut className="h-3.5 w-3.5" />
                   <span>Logout</span>
-                </motion.button>
+                </button>
               </div>
             ) : (
               <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => signIn()}
-                className="flex items-center space-x-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white px-5 py-2 rounded-lg neon-border transition-all"
+                className="hidden sm:flex items-center gap-1.5 px-4 py-2 text-sm font-medium btn-primary rounded-lg"
               >
-                <LogIn className="h-4 w-4" />
-                <span className="font-medium">Sign In</span>
+                <LogIn className="h-3.5 w-3.5" />
+                <span>Sign In</span>
               </motion.button>
             )}
+
+            {/* Mobile Hamburger */}
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden p-2 text-gray-400 hover:text-white transition-colors"
+            >
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Mobile Drawer */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden border-t border-white/[0.06] glass-nav overflow-hidden"
+          >
+            <div className="px-4 py-4 space-y-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  className="block px-3 py-2.5 text-sm text-gray-400 hover:text-white hover:bg-white/[0.05] rounded-lg transition-all"
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <div className="pt-3 border-t border-white/[0.06]">
+                {session ? (
+                  <div className="flex items-center justify-between px-3 py-2">
+                    <div className="flex items-center gap-2">
+                      {session.user?.image && (
+                        <img className="h-7 w-7 rounded-full" src={session.user.image} alt="Avatar" />
+                      )}
+                      <span className="text-sm text-gray-300">{session.user?.name}</span>
+                    </div>
+                    <button onClick={() => { signOut(); setMobileOpen(false); }} className="text-sm text-gray-500 hover:text-white">
+                      Logout
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => { signIn(); setMobileOpen(false); }}
+                    className="w-full flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium btn-primary rounded-lg"
+                  >
+                    <LogIn className="h-4 w-4" />
+                    Sign In
+                  </button>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 }

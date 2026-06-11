@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 
-export function BeforeAfterSlider({ original, result }: { original: string, result: string }) {
+export function BeforeAfterSlider({ original, result }: { original: string; result: string }) {
   const [sliderPosition, setSliderPosition] = useState(50);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -8,61 +8,55 @@ export function BeforeAfterSlider({ original, result }: { original: string, resu
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-      const percentage = (x / rect.width) * 100;
-      setSliderPosition(percentage);
+      setSliderPosition((x / rect.width) * 100);
     }
   };
 
-  const handleMouseMove = (e: React.MouseEvent) => handleMove(e.clientX);
-  const handleTouchMove = (e: React.TouchEvent) => handleMove(e.touches[0].clientX);
-
   return (
-    <div 
+    <div
       ref={containerRef}
-      className="relative w-full h-[60vh] max-h-[800px] overflow-hidden rounded-xl cursor-ew-resize select-none"
-      onMouseMove={handleMouseMove}
-      onTouchMove={handleTouchMove}
+      className="relative w-full h-[50vh] sm:h-[60vh] max-h-[700px] overflow-hidden rounded-2xl cursor-ew-resize select-none border border-white/[0.08]"
+      onMouseMove={(e) => handleMove(e.clientX)}
+      onTouchMove={(e) => handleMove(e.touches[0].clientX)}
     >
-      {/* Original Image (Background) */}
-      <img 
-        src={original} 
-        alt="Original" 
+      {/* Original (Background) */}
+      <img
+        src={original}
+        alt="Original"
         className="absolute inset-0 w-full h-full object-contain filter grayscale"
         draggable="false"
       />
-      
-      {/* Result Image (Clipped) */}
-      <div 
-        className="absolute inset-0 overflow-hidden"
-        style={{ width: `${sliderPosition}%` }}
-      >
-        <img 
-          src={result} 
-          alt="Restored" 
+
+      {/* Result (Clipped) */}
+      <div className="absolute inset-0 overflow-hidden" style={{ width: `${sliderPosition}%` }}>
+        <img
+          src={result}
+          alt="Restored"
           className="absolute inset-0 h-full object-contain max-w-none"
-          style={{ width: containerRef.current?.offsetWidth || '100%' }}
+          style={{ width: containerRef.current?.offsetWidth || "100%" }}
           draggable="false"
         />
       </div>
 
       {/* Slider Handle */}
-      <div 
-        className="absolute top-0 bottom-0 w-1 bg-white shadow-[0_0_10px_rgba(0,240,255,0.8)] pointer-events-none"
-        style={{ left: `${sliderPosition}%`, transform: 'translateX(-50%)' }}
+      <div
+        className="absolute top-0 bottom-0 w-[2px] pointer-events-none"
+        style={{ left: `${sliderPosition}%`, transform: "translateX(-50%)" }}
       >
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 bg-white rounded-full shadow-lg flex items-center justify-center">
-          <div className="flex gap-1">
-            <div className="w-0.5 h-3 bg-gray-400 rounded-full" />
-            <div className="w-0.5 h-3 bg-gray-400 rounded-full" />
+        <div className="absolute inset-0 bg-white/80 shadow-[0_0_12px_rgba(139,92,246,0.8)]" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm shadow-lg flex items-center justify-center border border-white/20">
+          <div className="flex gap-[3px]">
+            <div className="w-[2px] h-3 bg-gray-400 rounded-full" />
+            <div className="w-[2px] h-3 bg-gray-400 rounded-full" />
           </div>
         </div>
       </div>
 
       {/* Labels */}
-      <div className="absolute bottom-4 right-4 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold tracking-wider">
+      <div className="absolute bottom-3 right-3 px-3 py-1 rounded-lg text-[10px] font-mono tracking-wider glass text-gray-300">
         ORIGINAL
       </div>
-      <div className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold tracking-wider text-neon-blue">
+      <div className="absolute bottom-3 left-3 px-3 py-1 rounded-lg text-[10px] font-mono tracking-wider glass text-purple-300">
         ULTRA-HD
       </div>
     </div>

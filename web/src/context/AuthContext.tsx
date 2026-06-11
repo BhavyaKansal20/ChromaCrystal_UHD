@@ -31,10 +31,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [status, setStatus] = useState<"loading" | "authenticated" | "unauthenticated">("loading");
 
   useEffect(() => {
+    // TODO: Replace with Firebase onAuthStateChanged when credentials are provided
     const stored = localStorage.getItem("chromacrystal_auth");
     if (stored) {
-      setSession(JSON.parse(stored));
-      setStatus("authenticated");
+      try {
+        setSession(JSON.parse(stored));
+        setStatus("authenticated");
+      } catch {
+        localStorage.removeItem("chromacrystal_auth");
+        setStatus("unauthenticated");
+      }
     } else {
       setStatus("unauthenticated");
     }
@@ -42,22 +48,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signIn = (provider?: string) => {
     setStatus("loading");
-    // Simulate OAuth delay
+    // TODO: Replace with Firebase signInWithPopup(auth, provider) when credentials are provided
     setTimeout(() => {
       const mockUser = {
         user: {
           name: "Premium User",
-          email: "user@example.com",
-          image: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
+          email: "user@chromacrystal.ai",
+          image: "https://api.dicebear.com/7.x/avataaars/svg?seed=ChromaCrystal",
         },
       };
       localStorage.setItem("chromacrystal_auth", JSON.stringify(mockUser));
       setSession(mockUser);
       setStatus("authenticated");
-    }, 1500);
+    }, 1200);
   };
 
   const signOut = () => {
+    // TODO: Replace with Firebase signOut(auth) when credentials are provided
     localStorage.removeItem("chromacrystal_auth");
     setSession(null);
     setStatus("unauthenticated");

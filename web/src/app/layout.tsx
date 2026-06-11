@@ -2,10 +2,13 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 export const metadata: Metadata = {
-  title: "ChromaCrystal_UHD | Reviving History in Ultra Reality",
-  description: "AI-powered cinematic restoration, colorization, enhancement, and 4K upscaling technology.",
+  title: "ChromaCrystal UHD | AI-Powered Photo Restoration",
+  description: "Transform old, degraded photos into stunning Ultra-HD masterpieces with AI-powered colorization, face restoration, and 4K upscaling.",
+  keywords: "AI photo restoration, colorization, face restoration, 4K upscaling, DeOldify, GFPGAN, Real-ESRGAN",
+  authors: [{ name: "Bhavya Kansal", url: "https://bhavyakansal.dev" }],
 };
 
 export default function RootLayout({
@@ -14,18 +17,25 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="antialiased min-h-screen relative">
-        <div className="absolute top-0 -left-4 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-2xl opacity-20 animate-blob"></div>
-        <div className="absolute top-0 -right-4 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-2xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute -bottom-8 left-20 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-2xl opacity-20 animate-blob animation-delay-4000"></div>
-        <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] -z-10" />
-        <main className="relative z-10 flex flex-col min-h-screen">
-          <AuthProvider>
+    <html lang="en" className="scroll-smooth">
+      <body className="font-sans antialiased min-h-screen relative bg-[#030014] text-white overflow-x-hidden">
+        {/* Animated Background Orbs */}
+        <div className="fixed inset-0 -z-10 overflow-hidden">
+          <div className="bg-orb bg-orb-1" />
+          <div className="bg-orb bg-orb-2" />
+          <div className="bg-orb bg-orb-3" />
+          <div className="bg-grid absolute inset-0" />
+        </div>
+
+        <AuthProvider>
+          <div className="relative z-10 flex flex-col min-h-screen">
             <Navbar />
-            {children}
-          </AuthProvider>
-        </main>
+            <main className="flex-1">
+              {children}
+            </main>
+            <Footer />
+          </div>
+        </AuthProvider>
       </body>
     </html>
   );

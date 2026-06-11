@@ -8,51 +8,40 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
+      },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
         neon: {
-          blue: "#00f0ff",
-          purple: "#9d00ff",
-          dark: "#050510",
+          blue: "#3b82f6",
+          purple: "#8b5cf6",
+          cyan: "#06b6d4",
+          pink: "#ec4899",
+          dark: "#030014",
         },
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-neon': 'linear-gradient(to right, #00f0ff, #9d00ff)',
+        'gradient-neon': 'linear-gradient(135deg, #8b5cf6, #3b82f6)',
+        'gradient-warm': 'linear-gradient(135deg, #ec4899, #8b5cf6, #3b82f6)',
       },
       animation: {
-        blob: "blob 7s infinite",
+        'float': 'float 6s ease-in-out infinite',
+        'pulse-glow': 'pulse-glow 3s ease-in-out infinite',
+        'gradient-rotate': 'gradient-rotate 4s ease infinite',
+        'shimmer': 'shimmer 2s ease-in-out infinite',
       },
       keyframes: {
-        blob: {
-          "0%": {
-            transform: "translate(0px, 0px) scale(1)",
-          },
-          "33%": {
-            transform: "translate(30px, -50px) scale(1.1)",
-          },
-          "66%": {
-            transform: "translate(-20px, 20px) scale(0.9)",
-          },
-          "100%": {
-            transform: "translate(0px, 0px) scale(1)",
-          },
+        float: {
+          '0%, 100%': { transform: 'translateY(0px)' },
+          '50%': { transform: 'translateY(-20px)' },
         },
       },
     },
   },
-  plugins: [
-    function({ addUtilities }: any) {
-      addUtilities({
-        '.animation-delay-2000': {
-          'animation-delay': '2s',
-        },
-        '.animation-delay-4000': {
-          'animation-delay': '4s',
-        },
-      })
-    }
-  ],
+  plugins: [],
 };
 export default config;

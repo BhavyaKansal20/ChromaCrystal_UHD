@@ -20,13 +20,13 @@ export function UploadDropzone({ onUpload }: { onUpload: (file: File) => void })
   }, [onUpload]);
 
   return (
-    <motion.div 
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      className={`border-2 border-dashed rounded-xl p-8 md:p-16 text-center transition-all duration-300 cursor-pointer relative overflow-hidden glass ${
-        isDragOver 
-          ? "border-purple-500 bg-purple-500/10 shadow-[0_0_30px_rgba(139,92,246,0.3)]" 
-          : "border-gray-600 hover:border-blue-500/50 hover:bg-blue-500/5"
+    <motion.div
+      whileHover={{ scale: 1.01 }}
+      whileTap={{ scale: 0.99 }}
+      className={`relative rounded-2xl p-10 sm:p-16 text-center cursor-pointer transition-all duration-300 overflow-hidden border-2 border-dashed ${
+        isDragOver
+          ? "border-purple-500 bg-purple-500/10 shadow-[0_0_40px_rgba(139,92,246,0.15)]"
+          : "border-white/[0.1] hover:border-purple-500/40 hover:bg-white/[0.02]"
       }`}
       onDragEnter={(e) => { handleDrag(e); setIsDragOver(true); }}
       onDragLeave={(e) => { handleDrag(e); setIsDragOver(false); }}
@@ -34,30 +34,42 @@ export function UploadDropzone({ onUpload }: { onUpload: (file: File) => void })
       onDrop={handleDrop}
       onClick={() => document.getElementById("fileInput")?.click()}
     >
-      <input 
-        id="fileInput" 
-        type="file" 
-        className="hidden" 
+      <input
+        id="fileInput"
+        type="file"
+        className="hidden"
         accept="image/png, image/jpeg, image/webp, image/avif, image/heic"
         onChange={(e) => e.target.files && onUpload(e.target.files[0])}
       />
-      <div className="flex flex-col items-center justify-center pointer-events-none z-10 relative">
+
+      <div className="relative z-10 flex flex-col items-center pointer-events-none">
         <motion.div
-          animate={{ y: isDragOver ? -10 : 0 }}
+          animate={{ y: isDragOver ? -8 : 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          className={`p-4 rounded-2xl border mb-6 transition-colors ${
+            isDragOver
+              ? "bg-purple-500/20 border-purple-500/30 text-purple-300"
+              : "bg-white/[0.05] border-white/[0.08] text-gray-400"
+          }`}
         >
-          <UploadCloud className={`w-16 h-16 md:w-24 md:h-24 mb-6 transition-colors ${isDragOver ? "text-purple-400" : "text-gray-400"}`} />
+          <UploadCloud className="w-10 h-10 sm:w-12 sm:h-12" />
         </motion.div>
-        <h3 className="text-xl md:text-3xl font-bold mb-3 tracking-tight text-white glow-text">
-          Drag & Drop your historical photo here
+
+        <h3 className="text-lg sm:text-xl font-semibold text-white mb-2">
+          Drag & drop your photo here
         </h3>
-        <p className="text-sm md:text-lg text-gray-400 font-medium">
+        <p className="text-sm text-gray-500 mb-4">
           or click to browse from your device
         </p>
+
+        <div className="flex flex-wrap justify-center gap-2">
+          {["PNG", "JPG", "WEBP", "HEIC", "AVIF"].map((fmt) => (
+            <span key={fmt} className="px-2 py-0.5 text-[10px] font-mono text-gray-500 bg-white/[0.03] border border-white/[0.06] rounded">
+              {fmt}
+            </span>
+          ))}
+        </div>
       </div>
-      
-      {/* Background glow effect */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-purple-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
     </motion.div>
   );
 }
