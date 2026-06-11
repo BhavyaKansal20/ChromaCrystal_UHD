@@ -17,6 +17,15 @@ os.environ["NUMEXPR_NUM_THREADS"] = "2"
 cv2.setNumThreads(2)
 torch.set_num_threads(2)
 import gc
+import threading
+
+# ---------------------------------------------------------
+# MUTEX LOCKS: Factory Assembly Line
+# Prevents "Tensor Bleeding" when 5 users share Global Memory
+# ---------------------------------------------------------
+deoldify_lock = threading.Lock()
+gfpgan_lock = threading.Lock()
+realesrgan_lock = threading.Lock()
 
 try:
     from pillow_heif import register_heif_opener
@@ -168,7 +177,8 @@ class ChromaCrystalPipeline:
                 inp = np.expand_dims(inp, axis=0)
                 
                 input_name = self.deoldify_session.get_inputs()[0].name
-                out = self.deoldify_session.run(None, {input_name: inp})[0][0]
+                with deoldify_lock:
+                    out = self.deoldify_session.run(None, {input_name: inp})[0][0]
                 
                 colorized = out.transpose(1, 2, 0)
                 colorized = cv2.cvtColor(colorized, cv2.COLOR_BGR2RGB).astype(np.uint8)
@@ -193,7 +203,8 @@ class ChromaCrystalPipeline:
         # AI 2: Face Restoration (GFPGAN)
         if enable_face_restoration and self.face_enhancer:
             try:
-                _, _, img_restored = self.face_enhancer.enhance(img_colored, has_aligned=False, only_center_face=False, paste_back=True)
+                with gfpgan_lock:
+                    _, _, img_restored = self.face_enhancer.enhance(img_colored, has_aligned=False, only_center_face=False, paste_back=True)
             except Exception as e:
                 print(f"Face enhancer failed: {e}")
                 img_restored = img_colored
@@ -205,7 +216,8 @@ class ChromaCrystalPipeline:
         # AI 3: Ultra-HD Upscaling (Real-ESRGAN or Classical Fallback)
         if enable_heavy_upscaler and self.upscaler:
             try:
-                img_upscaled, _ = self.upscaler.enhance(img_restored, outscale=upscale_factor)
+                with realesrgan_lock:
+                    img_upscaled, _ = self.upscaler.enhance(img_restored, outscale=upscale_factor)
             except Exception as e:
                 print(f"Upscaler failed: {e}")
                 ih, iw = img_restored.shape[:2]
