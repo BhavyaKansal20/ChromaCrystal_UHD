@@ -124,9 +124,9 @@ class ChromaCrystalPipeline:
         is_hyper_speed = active_users >= 3
         if is_hyper_speed:
             print(f"🚨 HYPER-SPEED MODE ACTIVATED! (Active Users: {active_users})")
-            max_edge = 400  # Restored from 256 to give GFPGAN high-res details
-            deoldify_r_factor = 256  # Restored from 128 to ensure perfect skin tone colorization
-            enable_heavy_upscaler = False # Bypassing ESRGAN still saves 10+ seconds!
+            max_edge = 256  # Dynamically shrink base image to make ESRGAN lightning fast!
+            deoldify_r_factor = 256  # Keep colors perfect!
+            enable_heavy_upscaler = enable_upscaling # FORCE AI UPSCALER ON FOR 4K TEXTURE!
         else:
             print(f"✅ NORMAL MODE (Active Users: {active_users})")
             max_edge = 400
