@@ -6,7 +6,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import HtmlRedirect from "@/components/HtmlRedirect";
 import AuthModal from "@/components/AuthModal";
-import BackgroundTelemetry from "@/components/BackgroundTelemetry";
 
 export const metadata: Metadata = {
   title: "ChromaCrystal UHD | AI-Powered Photo Restoration",
@@ -31,7 +30,6 @@ export default function RootLayout({
           <div className="bg-grid absolute inset-0" />
         </div>
 
-        <BackgroundTelemetry />
 
         <ToastProvider>
           <AuthProvider>

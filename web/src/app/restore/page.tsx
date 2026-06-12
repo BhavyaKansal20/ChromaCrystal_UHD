@@ -11,7 +11,7 @@ import {
   Download, Sparkles, ChevronDown, Lock, RefreshCw, Database, History, Trash2, Send, Star, CheckCircle, Loader2, X
 } from "lucide-react";
 
-const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbzJRMguV_tan7GbxBkC0fjOYjpCEpjFz0IDxJyX4wiuJRtLSOZwXvVn8SDLTnN10-s8sw/exec";
+const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbzyeFevXGhnadkmBjCVIdwlaoU4EjI_P42EexiGh70awWq2za2Z2owmBsT-pJIP1BGu3Q/exec";
 
 interface HistoryItem {
   id: string;
@@ -455,14 +455,16 @@ export default function RestorePage() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="glass-card p-6 sm:p-8 feedback-glow-card"
+          className="glass-card p-6 sm:p-8 border border-purple-500/80 shadow-[0_0_40px_rgba(168,85,247,0.4)] bg-purple-900/10 relative overflow-hidden feedback-glow-card"
         >
+          {/* Animated glow background inside the card */}
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 via-pink-500/10 to-cyan-500/10 animate-pulse pointer-events-none" />
           <AnimatePresence mode="wait">
             {!fbSubmitted ? (
               <form onSubmit={handleFeedbackSubmit} className="flex flex-col gap-5 max-w-xl mx-auto">
                 <div className="flex flex-col items-center text-center">
-                  <div className="relative mb-2.5 flex items-center justify-center">
-                    <img src="/logo.png" alt="ChromaCrystal Logo" className="h-12 sm:h-13 w-auto hover:scale-105 transition-transform duration-500 drop-shadow-[0_0_8px_rgba(168,85,247,0.25)]" />
+                  <div className="relative mb-2.5 flex items-center justify-center z-10">
+                    <img src="/logo.png" alt="ChromaCrystal Logo" className="h-8 sm:h-9 w-auto hover:scale-105 transition-transform duration-500 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]" />
                   </div>
                   <div className="text-[9px] font-bold text-purple-400 tracking-widest uppercase mb-2">ChromaCrystal UHD</div>
                   <h2 className="text-xl sm:text-2xl font-black text-white">Share your experience ✨</h2>

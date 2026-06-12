@@ -7,7 +7,7 @@ import { useToast } from "@/context/ToastContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Star, Send, CheckCircle, Loader2 } from "lucide-react";
 
-const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbzJRMguV_tan7GbxBkC0fjOYjpCEpjFz0IDxJyX4wiuJRtLSOZwXvVn8SDLTnN10-s8sw/exec";
+const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbzyeFevXGhnadkmBjCVIdwlaoU4EjI_P42EexiGh70awWq2za2Z2owmBsT-pJIP1BGu3Q/exec";
 
 export default function FeedbackPage() {
   const { data: session } = useSession();
@@ -130,7 +130,7 @@ export default function FeedbackPage() {
                 {/* Header */}
                 <div className="flex flex-col items-center text-center">
                   <div className="relative mb-2.5 flex items-center justify-center">
-                    <img src="/logo.png" alt="ChromaCrystal Logo" className="h-12 sm:h-14 w-auto hover:scale-105 transition-transform duration-500 drop-shadow-[0_0_8px_rgba(139,92,246,0.25)]" />
+                    <img src="/logo.png" alt="ChromaCrystal Logo" className="h-8 sm:h-9 w-auto hover:scale-105 transition-transform duration-500 drop-shadow-[0_0_8px_rgba(139,92,246,0.25)]" />
                   </div>
                   <div className="text-[9px] font-bold text-purple-400 tracking-widest uppercase mb-2">ChromaCrystal UHD</div>
                   <h1 className="text-xl sm:text-2xl font-black text-white leading-tight">Share your experience ✨</h1>

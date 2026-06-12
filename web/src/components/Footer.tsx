@@ -15,7 +15,7 @@ export default function Footer() {
               <img
                 src="/logo.png"
                 alt="ChromaCrystal Logo"
-                className="h-12 sm:h-14 w-auto hover:scale-105 transition-transform duration-300 drop-shadow-[0_0_8px_rgba(139,92,246,0.25)]"
+                className="h-8 sm:h-9 w-auto hover:scale-105 transition-transform duration-300 drop-shadow-[0_0_8px_rgba(139,92,246,0.25)]"
               />
               <span className="text-[10px] font-bold gradient-text tracking-widest uppercase">ChromaCrystal UHD</span>
             </div>
@@ -56,9 +56,9 @@ export default function Footer() {
           <div>
             <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">Quick Links</h4>
             <ul className="space-y-2">
-              <li><Link href="/" className="text-gray-400 hover:text-purple-400 text-sm transition-colors">Home</Link></li>
-              <li><Link href="/#features" className="text-gray-400 hover:text-purple-400 text-sm transition-colors">Features</Link></li>
-              <li><Link href="/feedback" className="text-gray-400 hover:text-purple-400 text-sm transition-colors">Feedback</Link></li>
+              <li><Link href="/" className="text-gray-400 hover:text-purple-400 text-sm transition-colors neon-hover-trigger">Home</Link></li>
+              <li><Link href="/#features" className="text-gray-400 hover:text-purple-400 text-sm transition-colors neon-hover-trigger">Features</Link></li>
+              <li><Link href="/feedback" className="text-gray-400 hover:text-purple-400 text-sm transition-colors neon-hover-trigger">Feedback</Link></li>
             </ul>
           </div>
 
@@ -66,8 +66,8 @@ export default function Footer() {
           <div>
             <h4 className="text-sm font-semibold text-white uppercase tracking-wider mb-4">Legal</h4>
             <ul className="space-y-2">
-              <li><Link href="/privacy" className="text-gray-400 hover:text-purple-400 text-sm transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/terms" className="text-gray-400 hover:text-purple-400 text-sm transition-colors">Terms of Service</Link></li>
+              <li><Link href="/privacy" className="text-gray-400 hover:text-purple-400 text-sm transition-colors neon-hover-trigger">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="text-gray-400 hover:text-purple-400 text-sm transition-colors neon-hover-trigger">Terms of Service</Link></li>
             </ul>
           </div>
         </div>
