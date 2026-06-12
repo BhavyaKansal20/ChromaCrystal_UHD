@@ -2,11 +2,13 @@
 
 import { useState } from "react";
 import { useSession } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Mail, Lock, User, Sparkles, LogIn, AlertCircle } from "lucide-react";
 
 export default function AuthModal() {
   const { showAuthModal, setShowAuthModal, signIn, signInWithEmail, signUpWithEmail } = useSession();
+  const { toast } = useToast();
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -29,8 +31,11 @@ export default function AuthModal() {
     setError(null);
     try {
       await signIn(provider);
+      toast(`Successfully signed in with ${provider === "google" ? "Google" : "GitHub"}!`, "success");
     } catch (err: any) {
-      setError(err.message || "Failed to sign in.");
+      const msg = err.message || "Failed to sign in.";
+      setError(msg);
+      toast(msg, "error");
     } finally {
       setLoading(false);
     }
@@ -44,6 +49,7 @@ export default function AuthModal() {
     try {
       if (mode === "signin") {
         await signInWithEmail(email, password);
+        toast("Successfully signed in!", "success");
       } else {
         if (!name) {
           setError("Name is required");
@@ -51,6 +57,7 @@ export default function AuthModal() {
           return;
         }
         await signUpWithEmail(name, email, password);
+        toast("Account created successfully!", "success");
       }
     } catch (err: any) {
       let friendlyMessage = err.message;
@@ -64,6 +71,7 @@ export default function AuthModal() {
         friendlyMessage = "Please enter a valid email address.";
       }
       setError(friendlyMessage);
+      toast(friendlyMessage, "error");
     } finally {
       setLoading(false);
     }
@@ -96,9 +104,10 @@ export default function AuthModal() {
               {/* Logo / Header */}
               <div className="flex flex-col items-center text-center mt-1">
                 <div className="relative mb-2.5 flex items-center justify-center">
-                  <img src="/logo.png" alt="ChromaCrystal Logo" className="h-11 sm:h-13 w-auto hover:scale-105 transition-transform duration-500" />
+                  <img src="/logo.png" alt="ChromaCrystal Logo" className="h-14 sm:h-16 w-auto hover:scale-115 transition-transform duration-500 drop-shadow-[0_0_8px_rgba(139,92,246,0.3)]" />
                 </div>
-                <h3 className="text-lg font-black text-white tracking-tight">
+                <div className="text-[9px] font-bold text-purple-400 tracking-widest uppercase mb-3.5">ChromaCrystal UHD</div>
+                <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
                   {mode === "signin" ? "Welcome Back" : "Create Account"}
                 </h3>
                 <p className="text-[10px] text-gray-400 mt-0.5">

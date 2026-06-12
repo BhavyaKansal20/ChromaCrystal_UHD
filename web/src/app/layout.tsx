@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { ToastProvider } from "@/context/ToastContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import HtmlRedirect from "@/components/HtmlRedirect";
 import AuthModal from "@/components/AuthModal";
+import BackgroundTelemetry from "@/components/BackgroundTelemetry";
 
 export const metadata: Metadata = {
   title: "ChromaCrystal UHD | AI-Powered Photo Restoration",
@@ -29,17 +31,21 @@ export default function RootLayout({
           <div className="bg-grid absolute inset-0" />
         </div>
 
-        <AuthProvider>
-          <HtmlRedirect />
-          <AuthModal />
-          <div className="relative z-10 flex flex-col min-h-screen">
-            <Navbar />
-            <main className="flex-1">
-              {children}
-            </main>
-            <Footer />
-          </div>
-        </AuthProvider>
+        <BackgroundTelemetry />
+
+        <ToastProvider>
+          <AuthProvider>
+            <HtmlRedirect />
+            <AuthModal />
+            <div className="relative z-10 flex flex-col min-h-screen">
+              <Navbar />
+              <main className="flex-1">
+                {children}
+              </main>
+              <Footer />
+            </div>
+          </AuthProvider>
+        </ToastProvider>
       </body>
     </html>
   );

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, FormEvent } from "react";
 import { useSession } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import { UploadDropzone } from "@/components/UploadDropzone";
 import { ProcessingOverlay } from "@/components/ProcessingOverlay";
 import { BeforeAfterSlider } from "@/components/BeforeAfterSlider";
@@ -22,6 +23,7 @@ interface HistoryItem {
 
 export default function RestorePage() {
   const { data: session, status: authStatus, setShowAuthModal } = useSession();
+  const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
   const [status, setStatus] = useState<string>("idle");
@@ -131,6 +133,7 @@ export default function RestorePage() {
           const dlUrl = `/api/v1/download/${id}`;
           setResultUrl(dlUrl);
           setShowSuccessModal(true);
+          toast("Photo restoration completed successfully!", "success");
 
           // Save to downloads history
           const newItem: HistoryItem = {
@@ -150,6 +153,7 @@ export default function RestorePage() {
         } else if (data.status === "failed") {
           clearInterval(interval);
           setStatus("error");
+          toast("Restoration failed. Please try again.", "error");
         } else {
           setStatus(data.status);
         }
@@ -157,6 +161,7 @@ export default function RestorePage() {
         console.error(err);
         clearInterval(interval);
         setStatus("error");
+        toast("Connection error during status polling.", "error");
       }
     }, 1000);
   };
@@ -230,9 +235,11 @@ export default function RestorePage() {
       ]);
 
       setFbSubmitted(true);
+      toast("Feedback submitted! Thank you for your review.", "success");
     } catch (err) {
       console.error(err);
       setFbSubmitted(true);
+      toast("Feedback submitted! Thank you for your review.", "success");
     } finally {
       setFbSubmitting(false);
     }
@@ -445,16 +452,16 @@ export default function RestorePage() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="glass-card p-6 sm:p-8 border border-purple-500/40 shadow-[0_0_35px_rgba(168,85,247,0.25)] ring-1 ring-purple-500/20"
+          className="glass-card p-6 sm:p-8 feedback-glow-card"
         >
           <AnimatePresence mode="wait">
             {!fbSubmitted ? (
               <form onSubmit={handleFeedbackSubmit} className="flex flex-col gap-5 max-w-xl mx-auto">
                 <div className="flex flex-col items-center text-center">
                   <div className="relative mb-3 flex items-center justify-center">
-                    <img src="/logo.png" alt="ChromaCrystal Logo" className="h-14 w-auto hover:scale-105 transition-transform duration-500" />
+                    <img src="/logo.png" alt="ChromaCrystal Logo" className="h-20 sm:h-22 w-auto hover:scale-115 transition-transform duration-500 drop-shadow-[0_0_12px_rgba(168,85,247,0.3)]" />
                   </div>
-                  <div className="text-[10px] font-bold text-purple-400 tracking-widest uppercase mb-1">Feedback Form</div>
+                  <div className="text-[9px] font-bold text-purple-400 tracking-widest uppercase mb-2">ChromaCrystal UHD</div>
                   <h2 className="text-xl sm:text-2xl font-black text-white">Share your experience ✨</h2>
                   <p className="text-xs text-gray-500 mt-1">Takes 30 seconds — helps us improve!</p>
                 </div>

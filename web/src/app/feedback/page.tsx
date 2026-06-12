@@ -3,6 +3,7 @@
 import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { useSession } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Star, Send, CheckCircle, Loader2 } from "lucide-react";
 
@@ -10,6 +11,7 @@ const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbzJRMguV_tan7
 
 export default function FeedbackPage() {
   const { data: session } = useSession();
+  const { toast } = useToast();
   const [name, setName] = useState(session?.user?.name || "");
   const [feature, setFeature] = useState<string>("✨ All Features");
   const [rating, setRating] = useState(0);
@@ -82,9 +84,11 @@ export default function FeedbackPage() {
       ]);
 
       setIsSubmitted(true);
+      toast("Feedback submitted! Thank you for your review.", "success");
     } catch (err) {
       console.error(err);
       setIsSubmitted(true); // Treat as submitted (no-cors mode)
+      toast("Feedback submitted! Thank you for your review.", "success");
     } finally {
       setIsSubmitting(false);
     }
@@ -122,10 +126,10 @@ export default function FeedbackPage() {
               <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                 {/* Header */}
                 <div className="flex flex-col items-center text-center">
-                  <div className="relative mb-4 flex items-center justify-center">
-                    <img src="/logo.png" alt="ChromaCrystal Logo" className="h-16 w-auto hover:scale-105 transition-transform duration-500" />
+                  <div className="relative mb-3 flex items-center justify-center">
+                    <img src="/logo.png" alt="ChromaCrystal Logo" className="h-20 sm:h-24 w-auto hover:scale-115 transition-transform duration-500 drop-shadow-[0_0_12px_rgba(139,92,246,0.3)]" />
                   </div>
-                  <div className="text-[10px] font-bold text-purple-400 tracking-widest uppercase mb-1">CHROMACRYSTAL UHD</div>
+                  <div className="text-[9px] font-bold text-purple-400 tracking-widest uppercase mb-2">ChromaCrystal UHD</div>
                   <h1 className="text-xl sm:text-2xl font-black text-white leading-tight">Share your experience ✨</h1>
                   <p className="text-xs text-gray-500 mt-1">Takes 30 seconds — helps us improve!</p>
                 </div>
