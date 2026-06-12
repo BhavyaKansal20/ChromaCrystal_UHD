@@ -190,20 +190,24 @@ Here is how we solved the mathematically impossible:
 ```text
 ChromaCrystal_UHD/
 │
-├── 📂 api/
-│   ├── 📄 main.py                ← FastAPI Backend & Traffic Sensor
-│   ├── 📄 pipeline.py            ← The Factory Assembly Line (AI Math)
-│   └── 📄 ARCHITECTURE.md        ← Deep-dive technical notes
+├── 📂 api/                       ← FastAPI Python Backend
+│   ├── 📄 main.py                ← Backend gateway, Thread Orchestrator & Traffic Sensor
+│   ├── 📄 pipeline.py            ← AI Pipeline Executables (DeOldify, GFPGAN, Real-ESRGAN)
+│   └── 📄 ARCHITECTURE.md        ← Technical Architecture Deep-Dive
 │
-├── 📂 src/
-│   ├── 📂 components/            ← React UI Components
-│   └── 📄 App.jsx                ← Frontend Application
+├── 📂 web/                       ← Next.js 14 Web Application
+│   ├── 📂 src/
+│   │   ├── 📂 app/               ← App Router Routes (features, feedback, restore)
+│   │   │   ├── 📄 page.tsx       ← Landing Page UI
+│   │   │   └── 📄 globals.css    ← Glassmorphism & Drifting Orbs Styles
+│   │   └── 📂 components/        ← Modular UI Cards (AuthModal, BeforeAfterSlider)
+│   ├── 📄 package.json           ← Node dependencies (Framer Motion, Lucide icons)
+│   └── 📄 next.config.js         ← Next.js Configuration
 │
-├── 📄 CASE_STUDY.md              ← Raw markdown of the architecture
-├── 📄 CASE_STUDY.docx            ← Formatted document for presentation
-├── 📄 CASE_STUDY.html            ← Web-viewable case study
-├── 📄 requirements.txt           ← Python AI dependencies
-└── 📄 package.json               ← React dependencies
+├── 📄 CASE_STUDY.md              ← Markdown Case Study of Optimization
+├── 📄 CASE_STUDY.docx            ← Document Case Study
+├── 📄 CASE_STUDY.html            ← Web-viewable HTML Case Study
+└── 📄 compose.yaml               ← Docker Compose orchestrator
 ```
 
 ---
@@ -229,18 +233,19 @@ cd ChromaCrystal_UHD
 ### Step 2 — Backend Setup
 
 ```bash
-pip install -r requirements.txt
+pip install -r api/requirements.txt
 cd api
 uvicorn main:app --reload --port 8000
-# 🚀 Global Brain Loaded. API Running.
+# 🚀 Global Brain Loaded. API Running on port 8000.
 ```
 
 ### Step 3 — Frontend Setup
 
 ```bash
+cd ../web
 npm install
 npm run dev
-# 🚀 React running on http://localhost:5173
+# 🚀 Next.js App Router running on http://localhost:3000
 ```
 
 ---

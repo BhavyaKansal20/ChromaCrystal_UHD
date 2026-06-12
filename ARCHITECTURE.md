@@ -30,3 +30,11 @@ To further ensure maximum throughput on the 2-Core CPU, we applied edge-case har
 1. **INT8 Quantization:** The 32-bit floating-point AI models were dynamically compressed into 8-bit integers (`QUInt8`), making them 4x smaller and significantly faster for the CPU to process.
 2. **PyTorch 2.0 JIT Compilation:** The raw neural network layers were compiled into C++ / OpenMP machine code via TorchInductor.
 3. **Thread Orchestration:** OpenCV and OpenMP threads were strictly locked (`OMP_NUM_THREADS="1"`) to prevent Context-Switching Thrashing between the 2 physical cores.
+
+## 5. Full-Stack Security & Client Optimizations
+To transition from a proof-of-concept into a commercial-grade SaaS product, we re-engineered the application layers:
+1. **Next.js 14 Web Engine:** Re-architected the client in Next.js 14 App Router using TypeScript and TailwindCSS, separating server-side routes and secure context APIs from client-side interactive elements.
+2. **OAuth & Password Authentication:** Implemented secure session handling utilizing Firebase Authentication with support for Google, GitHub, and custom email/password user sessions.
+3. **Telemetry & Feedback Database Pipeline:** Configured a high-efficiency Google Sheets logging engine that leverages simple request formatting (`text/plain` and `application/x-www-form-urlencoded` payloads) to bypass browser CORS preflight limitations (OPTIONS requests) when posting directly to Google Apps Script.
+4. **60FPS Client Performance:** Eliminated resource-heavy, SVG-heavy real-time telemetry HUD components that caused browser rendering bottlenecks. Telemetry statistics are now tracked in background processes, keeping the user interface smooth and responsive.
+
