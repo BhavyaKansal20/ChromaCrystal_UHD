@@ -49,6 +49,21 @@ export default function Home() {
           animate="visible"
           className="text-center max-w-4xl mx-auto"
         >
+          {/* Crystal Logo Centerpiece */}
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0, rotateY: -30 }}
+            animate={{ scale: 1, opacity: 1, rotateY: 0 }}
+            transition={{ duration: 1.5, ease: "easeOut" }}
+            className="relative flex justify-center mb-8"
+          >
+            <div className="absolute inset-0 bg-purple-500/20 blur-[100px] rounded-full" />
+            <img 
+              src="/logo.png" 
+              alt="ChromaCrystal Logo" 
+              className="w-64 h-64 sm:w-80 sm:h-80 object-contain drop-shadow-[0_0_40px_rgba(139,92,246,0.6)] animate-pulse"
+            />
+          </motion.div>
+
           {/* Badge */}
           <motion.div
             variants={fadeInUp}

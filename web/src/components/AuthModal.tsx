@@ -84,14 +84,14 @@ export default function AuthModal() {
           {/* Transparent Backdrop to close on click outside */}
           <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]" onClick={handleClose} />
 
-          {/* Floating Auth Card Toast (Bottom-Right) */}
-          <div className="fixed bottom-6 right-6 z-50 p-4 max-w-sm sm:max-w-[400px] w-full pointer-events-none">
+          {/* Centered Auth Card */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
             <motion.div
-              initial={{ opacity: 0, y: 80, scale: 0.9 }}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 80, scale: 0.9 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="liquid-glass w-full p-6 sm:p-7 shadow-[0_20px_50px_rgba(139,92,246,0.35)] border border-purple-500/40 flex flex-col gap-5 pointer-events-auto relative"
+              className="liquid-glass w-full max-w-md p-6 sm:p-8 rounded-[2rem] shadow-[0_20px_50px_rgba(139,92,246,0.35)] border border-purple-500/40 flex flex-col gap-6 pointer-events-auto relative"
             >
               {/* Close button */}
               <button
