@@ -11,13 +11,13 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           {/* Brand */}
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-3 mb-4">
               <img
                 src="/logo.png"
                 alt="ChromaCrystal Logo"
-                className="h-7 w-auto"
+                className="h-12 w-auto hover:scale-105 transition-transform"
               />
-              <span className="text-xl font-extrabold gradient-text">ChromaCrystal UHD</span>
+              <span className="text-sm font-bold gradient-text tracking-tight uppercase">ChromaCrystal UHD</span>
             </div>
 
             <p className="text-gray-400 text-sm leading-relaxed max-w-md">

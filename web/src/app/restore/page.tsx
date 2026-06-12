@@ -200,14 +200,35 @@ export default function RestorePage() {
 
       const submissionUrl = `${GOOGLE_SHEETS_URL}?${params.toString()}`;
 
-      await fetch(submissionUrl, {
-        method: "POST",
-        mode: "no-cors",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
+      // Concurrent Multi-Format Submission to ensure compatibility with Google Apps Script
+      await Promise.allSettled([
+        // 1. GET with URL Query Params
+        fetch(submissionUrl, {
+          method: "GET",
+          mode: "no-cors"
+        }),
+        // 2. POST with URL Query Params
+        fetch(submissionUrl, {
+          method: "POST",
+          mode: "no-cors"
+        }),
+        // 3. POST with URL-encoded Form body
+        fetch(GOOGLE_SHEETS_URL, {
+          method: "POST",
+          mode: "no-cors",
+          body: params
+        }),
+        // 4. POST with JSON body stringified
+        fetch(GOOGLE_SHEETS_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        })
+      ]);
+
       setFbSubmitted(true);
     } catch (err) {
       console.error(err);
@@ -424,14 +445,17 @@ export default function RestorePage() {
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="glass-card p-6 sm:p-8 border border-white/[0.08]"
+          className="glass-card p-6 sm:p-8 border border-purple-500/40 shadow-[0_0_35px_rgba(168,85,247,0.25)] ring-1 ring-purple-500/20"
         >
           <AnimatePresence mode="wait">
             {!fbSubmitted ? (
               <form onSubmit={handleFeedbackSubmit} className="flex flex-col gap-5 max-w-xl mx-auto">
-                <div>
-                  <div className="text-[10px] font-bold text-purple-400 tracking-wider uppercase mb-1">Feedback Form</div>
-                  <h2 className="text-2xl font-black text-white">Share your experience ✨</h2>
+                <div className="flex flex-col items-center text-center">
+                  <div className="relative mb-3 flex items-center justify-center">
+                    <img src="/logo.png" alt="ChromaCrystal Logo" className="h-14 w-auto hover:scale-105 transition-transform duration-500" />
+                  </div>
+                  <div className="text-[10px] font-bold text-purple-400 tracking-widest uppercase mb-1">Feedback Form</div>
+                  <h2 className="text-xl sm:text-2xl font-black text-white">Share your experience ✨</h2>
                   <p className="text-xs text-gray-500 mt-1">Takes 30 seconds — helps us improve!</p>
                 </div>
 
@@ -658,65 +682,63 @@ export default function RestorePage() {
         )}
       </motion.div>
 
-      {/* Restoration Success Modal Overlay */}
+      {/* Restoration Success Popup Toast (Bottom-Right) */}
       <AnimatePresence>
         {showSuccessModal && resultUrl && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+          <div className="fixed bottom-6 right-6 z-50 p-4 max-w-sm sm:max-w-md w-full pointer-events-none">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
-              className="glass-card max-w-md w-full p-6 sm:p-8 border border-white/[0.08] flex flex-col items-center gap-5 shadow-[0_0_50px_rgba(139,92,246,0.2)] text-center relative"
+              initial={{ opacity: 0, y: 80, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 80, scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="liquid-glass p-5 sm:p-6 flex flex-col items-center gap-4 shadow-[0_20px_50px_rgba(139,92,246,0.35)] border border-purple-500/40 text-center relative pointer-events-auto"
             >
               {/* Close Button top right */}
               <button
                 onClick={() => setShowSuccessModal(false)}
                 className="absolute top-4 right-4 p-1 rounded-lg hover:bg-white/[0.05] text-gray-500 hover:text-white transition-colors cursor-pointer"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4" />
               </button>
 
-              <div className="rounded-full bg-gradient-to-br from-purple-500/20 to-cyan-500/20 p-5 ring-1 ring-purple-500/30 shadow-[0_0_30px_rgba(168,85,247,0.2)]">
-                <CheckCircle className="h-10 w-10 text-purple-400 animate-pulse" />
+              <div className="rounded-full bg-gradient-to-br from-purple-500/20 to-cyan-500/20 p-3 ring-1 ring-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                <CheckCircle className="h-7 w-7 text-purple-400 animate-pulse" />
               </div>
 
               <div>
-                <h2 className="text-2xl font-black text-white tracking-tight">Restoration Complete! 🎉</h2>
-                <p className="text-xs text-gray-400 mt-1">
-                  Your photo has been successfully restored to Ultra-HD.
+                <h2 className="text-lg font-black text-white tracking-tight">Restoration Complete! 🎉</h2>
+                <p className="text-[10px] text-gray-400 mt-0.5">
+                  Your photo was successfully processed and saved.
                 </p>
               </div>
 
               {/* Thumbnail of restored image */}
-              <div className="w-full h-40 rounded-xl overflow-hidden border border-white/[0.08] bg-black/20 relative group">
+              <div className="w-full h-28 rounded-xl overflow-hidden border border-white/[0.08] bg-black/20 relative group">
                 <img
                   src={resultUrl}
                   alt="Restored Preview"
                   className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500"
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end justify-center p-2">
-                  <span className="text-[10px] text-gray-300 font-semibold uppercase tracking-wider">Restored Preview</span>
-                </div>
               </div>
 
               {/* Database Notice Alert */}
-              <div className="flex gap-2.5 p-3.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-left text-xs leading-relaxed">
+              <div className="flex gap-2 p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-left text-[10px] leading-relaxed">
                 <Database className="w-4.5 h-4.5 text-cyan-400 shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-bold text-white block mb-0.5">Photo is available in the downloads section.</span>
-                  This is a temporary database. Restored photos are cached in-memory and auto-purged within 3–5 hours. Please download your files promptly.
+                  <span className="font-bold text-white block mb-0.5">Stored in temporary database.</span>
+                  Auto-purged within 3–5 hours. Please download your masterpiece promptly.
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="w-full flex flex-col gap-2.5">
+              <div className="w-full flex flex-col gap-2">
                 <a
                   href={resultUrl}
                   download={`ChromaCrystal_${file?.name || "restored.jpg"}`}
                   onClick={() => setShowSuccessModal(false)}
-                  className="w-full btn-primary py-3 rounded-xl text-sm flex items-center justify-center gap-2 cursor-pointer font-bold shadow-[0_0_20px_rgba(147,51,234,0.3)] border border-purple-500/20"
+                  className="w-full btn-primary py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 cursor-pointer font-bold shadow-[0_0_15px_rgba(147,51,234,0.3)] border border-purple-500/20"
                 >
-                  <Download className="h-4.5 w-4.5" />
+                  <Download className="h-4 w-4" />
                   Download Masterpiece
                 </a>
                 <div className="grid grid-cols-2 gap-2">
@@ -725,16 +747,16 @@ export default function RestorePage() {
                       setStatus("idle");
                       setShowSuccessModal(false);
                     }}
-                    className="btn-secondary py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer font-medium"
+                    className="btn-secondary py-2 rounded-xl text-[10px] flex items-center justify-center gap-1 cursor-pointer font-medium"
                   >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    Restore Another
+                    <RefreshCw className="w-3 h-3" />
+                    Another
                   </button>
                   <button
                     onClick={() => setShowSuccessModal(false)}
-                    className="btn-secondary py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer font-medium"
+                    className="btn-secondary py-2 rounded-xl text-[10px] flex items-center justify-center gap-1 cursor-pointer font-medium"
                   >
-                    Close & Compare
+                    Close
                   </button>
                 </div>
               </div>

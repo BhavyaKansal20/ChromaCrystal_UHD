@@ -44,6 +44,65 @@ export default function Home() {
     <div className="flex flex-col w-full">
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-4 pt-20 pb-16">
+        {/* Floating Core Engine Status Widget (Left Side) */}
+        <div className="hidden lg:block absolute left-8 xl:left-16 top-1/4 w-72 z-20 animate-bob-slow pointer-events-none">
+          <div className="liquid-glass p-5 border border-purple-500/20 shadow-[0_0_20px_rgba(139,92,246,0.15)] flex flex-col gap-3.5 backdrop-blur-2xl">
+            <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
+              <span className="text-xs font-black uppercase text-purple-300 tracking-wider">⚙️ Core Engine Status</span>
+              <div className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-[10px] text-emerald-400 font-mono">ACTIVE</span>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2.5 font-mono text-[10px] text-gray-400">
+              <div className="flex justify-between">
+                <span>FastAPI Gateway</span>
+                <span className="text-white">Online (9ms)</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Isolated Workers</span>
+                <span className="text-purple-400">3 Subprocesses</span>
+              </div>
+              <div className="flex justify-between">
+                <span>VRAM Sweeper</span>
+                <span className="text-cyan-400">100% Reclamation</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Inference Queue</span>
+                <span className="text-white">sqlite_db OK</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Floating Inference Feed Widget (Right Side) */}
+        <div className="hidden lg:block absolute right-8 xl:right-16 top-1/3 w-76 z-20 animate-bob-slower pointer-events-none">
+          <div className="liquid-glass p-5 border border-cyan-500/20 shadow-[0_0_20px_rgba(6,182,212,0.15)] flex flex-col gap-3.5 backdrop-blur-2xl">
+            <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
+              <span className="text-xs font-black uppercase text-cyan-300 tracking-wider">📊 Live Inference Feed</span>
+              <span className="text-[9px] text-gray-500 font-mono">1.2s AGO</span>
+            </div>
+            <div className="flex flex-col gap-2.5 font-mono text-[10px] text-gray-400">
+              <div className="flex items-center gap-2">
+                <span className="text-purple-400">[GFPGAN]</span>
+                <span className="text-white truncate">Face restore sequence complete</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-cyan-400">[DeOldify]</span>
+                <span className="text-white truncate">Color saturation boost OK</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-pink-400">[RealESRGAN]</span>
+                <span className="text-white truncate">4K upscaled image cached</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-emerald-400">[Brain]</span>
+                <span className="text-white truncate">Task swept from SQLite queue</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <motion.div
           initial="hidden"
           animate="visible"

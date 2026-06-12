@@ -52,14 +52,35 @@ export default function FeedbackPage() {
 
       const submissionUrl = `${GOOGLE_SHEETS_URL}?${params.toString()}`;
 
-      await fetch(submissionUrl, {
-        method: "POST",
-        mode: "no-cors",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
+      // Concurrent Multi-Format Submission to ensure compatibility with Google Apps Script
+      await Promise.allSettled([
+        // 1. GET with URL Query Params
+        fetch(submissionUrl, {
+          method: "GET",
+          mode: "no-cors"
+        }),
+        // 2. POST with URL Query Params
+        fetch(submissionUrl, {
+          method: "POST",
+          mode: "no-cors"
+        }),
+        // 3. POST with URL-encoded Form body
+        fetch(GOOGLE_SHEETS_URL, {
+          method: "POST",
+          mode: "no-cors",
+          body: params
+        }),
+        // 4. POST with JSON body stringified
+        fetch(GOOGLE_SHEETS_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(payload)
+        })
+      ]);
+
       setIsSubmitted(true);
     } catch (err) {
       console.error(err);
@@ -100,9 +121,12 @@ export default function FeedbackPage() {
             {!isSubmitted ? (
               <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                 {/* Header */}
-                <div>
-                  <div className="text-[10px] font-bold text-purple-400 tracking-wider uppercase mb-1">CHROMACRYSTAL UHD</div>
-                  <h1 className="text-2xl font-black text-white leading-tight">Share your experience ✨</h1>
+                <div className="flex flex-col items-center text-center">
+                  <div className="relative mb-4 flex items-center justify-center">
+                    <img src="/logo.png" alt="ChromaCrystal Logo" className="h-16 w-auto hover:scale-105 transition-transform duration-500" />
+                  </div>
+                  <div className="text-[10px] font-bold text-purple-400 tracking-widest uppercase mb-1">CHROMACRYSTAL UHD</div>
+                  <h1 className="text-xl sm:text-2xl font-black text-white leading-tight">Share your experience ✨</h1>
                   <p className="text-xs text-gray-500 mt-1">Takes 30 seconds — helps us improve!</p>
                 </div>
 

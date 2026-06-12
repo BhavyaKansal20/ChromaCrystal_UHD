@@ -99,10 +99,10 @@ export default function AuthModal() {
 
           {/* Logo / Header */}
           <div className="flex flex-col items-center text-center mt-2">
-            <div className="relative mb-3 flex items-center justify-center">
-              <img src="/logo.png" alt="ChromaCrystal Logo" className="h-12 w-auto animate-pulse" />
+            <div className="relative mb-4 flex items-center justify-center">
+              <img src="/logo.png" alt="ChromaCrystal Logo" className="h-18 sm:h-22 w-auto hover:scale-105 transition-transform duration-500" />
             </div>
-            <h3 className="text-2xl font-extrabold text-white tracking-tight">
+            <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
               {mode === "signin" ? "Welcome Back" : "Create Account"}
             </h3>
             <p className="text-sm text-gray-400 mt-1">
