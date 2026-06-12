@@ -12,9 +12,14 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <Diamond className="h-6 w-6 text-purple-400" />
-              <span className="text-xl font-bold gradient-text">ChromaCrystal UHD</span>
+              <img
+                src="/logo.png"
+                alt="ChromaCrystal Logo"
+                className="h-7 w-auto"
+              />
+              <span className="text-xl font-extrabold gradient-text">ChromaCrystal UHD</span>
             </div>
+
             <p className="text-gray-400 text-sm leading-relaxed max-w-md">
               AI-powered cinematic photo restoration. Transform old, degraded, black-and-white 
               memories into stunning Ultra-HD reality using DeOldify, GFPGAN, and Real-ESRGAN.

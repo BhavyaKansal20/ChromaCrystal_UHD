@@ -233,18 +233,20 @@ body {
 
 /* Background orbs */
 .bg-orb {
-  position: absolute;
+  position: fixed;
   border-radius: 50%;
-  filter: blur(80px);
   opacity: 0.15;
   animation: float 20s ease-in-out infinite;
   pointer-events: none;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
 }
 
 .bg-orb-1 {
   width: 600px;
   height: 600px;
-  background: radial-gradient(circle, #8b5cf6, transparent 70%);
+  background: radial-gradient(circle, #8b5cf6, transparent 65%);
   top: -200px;
   left: -200px;
   animation-delay: 0s;
@@ -253,8 +255,8 @@ body {
 .bg-orb-2 {
   width: 500px;
   height: 500px;
-  background: radial-gradient(circle, #3b82f6, transparent 70%);
-  top: 50%;
+  background: radial-gradient(circle, #3b82f6, transparent 65%);
+  top: 30%;
   right: -150px;
   animation-delay: -7s;
 }
@@ -262,11 +264,12 @@ body {
 .bg-orb-3 {
   width: 400px;
   height: 400px;
-  background: radial-gradient(circle, #ec4899, transparent 70%);
+  background: radial-gradient(circle, #ec4899, transparent 65%);
   bottom: -100px;
-  left: 30%;
+  left: 20%;
   animation-delay: -14s;
 }
+
 
 /* Grid overlay */
 .bg-grid {
