@@ -71,44 +71,40 @@ export default function AuthModal() {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-        {/* Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={handleClose}
-          className="absolute inset-0 bg-[#030014]/60 backdrop-blur-md"
-        />
+      {showAuthModal && (
+        <>
+          {/* Transparent Backdrop to close on click outside */}
+          <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[2px]" onClick={handleClose} />
 
-        {/* Modal Card */}
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          transition={{ type: "spring", duration: 0.5 }}
-          className="relative w-full max-w-[420px] rounded-3xl bg-[#0b0820]/80 border border-white/[0.08] p-8 shadow-2xl backdrop-blur-2xl z-10 flex flex-col gap-6"
-        >
-          {/* Close button */}
-          <button
-            onClick={handleClose}
-            className="absolute top-5 right-5 text-gray-500 hover:text-white p-1.5 rounded-full hover:bg-white/[0.05] transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {/* Floating Auth Card Toast (Bottom-Right) */}
+          <div className="fixed bottom-6 right-6 z-50 p-4 max-w-sm sm:max-w-[400px] w-full pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, y: 80, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 80, scale: 0.9 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              className="liquid-glass w-full p-6 sm:p-7 shadow-[0_20px_50px_rgba(139,92,246,0.35)] border border-purple-500/40 flex flex-col gap-5 pointer-events-auto relative"
+            >
+              {/* Close button */}
+              <button
+                onClick={handleClose}
+                className="absolute top-4 right-4 text-gray-500 hover:text-white p-1 rounded-full hover:bg-white/[0.05] transition-colors"
+              >
+                <X className="w-4.5 h-4.5" />
+              </button>
 
-          {/* Logo / Header */}
-          <div className="flex flex-col items-center text-center mt-2">
-            <div className="relative mb-4 flex items-center justify-center">
-              <img src="/logo.png" alt="ChromaCrystal Logo" className="h-18 sm:h-22 w-auto hover:scale-105 transition-transform duration-500" />
-            </div>
-            <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-              {mode === "signin" ? "Welcome Back" : "Create Account"}
-            </h3>
-            <p className="text-sm text-gray-400 mt-1">
-              {mode === "signin" ? "Sign in to your ChromaCrystal account" : "Join ChromaCrystal for free"}
-            </p>
-          </div>
+              {/* Logo / Header */}
+              <div className="flex flex-col items-center text-center mt-1">
+                <div className="relative mb-2.5 flex items-center justify-center">
+                  <img src="/logo.png" alt="ChromaCrystal Logo" className="h-11 sm:h-13 w-auto hover:scale-105 transition-transform duration-500" />
+                </div>
+                <h3 className="text-lg font-black text-white tracking-tight">
+                  {mode === "signin" ? "Welcome Back" : "Create Account"}
+                </h3>
+                <p className="text-[10px] text-gray-400 mt-0.5">
+                  {mode === "signin" ? "Sign in to your ChromaCrystal account" : "Join ChromaCrystal for free"}
+                </p>
+              </div>
 
           {/* Error Message */}
           {error && (
@@ -267,6 +263,8 @@ export default function AuthModal() {
           </div>
         </motion.div>
       </div>
+      </>
+      )}
     </AnimatePresence>
   );
 }

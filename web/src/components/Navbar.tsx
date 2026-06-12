@@ -28,9 +28,9 @@ export default function Navbar() {
             <img
               src="/logo.png"
               alt="ChromaCrystal Logo"
-              className="h-14 sm:h-16 w-auto hover:scale-105 transition-transform duration-300"
+              className="h-18 sm:h-22 w-auto hover:scale-105 transition-transform duration-300"
             />
-            <span className="text-sm sm:text-base md:text-lg font-black gradient-text tracking-tight uppercase whitespace-nowrap">
+            <span className="text-xs sm:text-sm md:text-base font-black gradient-text tracking-tight uppercase whitespace-nowrap">
               ChromaCrystal UHD
             </span>
           </Link>

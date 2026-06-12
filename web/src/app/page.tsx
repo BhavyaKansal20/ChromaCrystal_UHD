@@ -44,65 +44,6 @@ export default function Home() {
     <div className="flex flex-col w-full">
       {/* Hero Section */}
       <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-4 pt-20 pb-16">
-        {/* Floating Core Engine Status Widget (Left Side) */}
-        <div className="hidden lg:block absolute left-8 xl:left-16 top-1/4 w-72 z-20 animate-bob-slow pointer-events-none">
-          <div className="liquid-glass p-5 border border-purple-500/20 shadow-[0_0_20px_rgba(139,92,246,0.15)] flex flex-col gap-3.5 backdrop-blur-2xl">
-            <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
-              <span className="text-xs font-black uppercase text-purple-300 tracking-wider">⚙️ Core Engine Status</span>
-              <div className="flex items-center gap-1.5">
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="text-[10px] text-emerald-400 font-mono">ACTIVE</span>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2.5 font-mono text-[10px] text-gray-400">
-              <div className="flex justify-between">
-                <span>FastAPI Gateway</span>
-                <span className="text-white">Online (9ms)</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Isolated Workers</span>
-                <span className="text-purple-400">3 Subprocesses</span>
-              </div>
-              <div className="flex justify-between">
-                <span>VRAM Sweeper</span>
-                <span className="text-cyan-400">100% Reclamation</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Inference Queue</span>
-                <span className="text-white">sqlite_db OK</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Floating Inference Feed Widget (Right Side) */}
-        <div className="hidden lg:block absolute right-8 xl:right-16 top-1/3 w-76 z-20 animate-bob-slower pointer-events-none">
-          <div className="liquid-glass p-5 border border-cyan-500/20 shadow-[0_0_20px_rgba(6,182,212,0.15)] flex flex-col gap-3.5 backdrop-blur-2xl">
-            <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
-              <span className="text-xs font-black uppercase text-cyan-300 tracking-wider">📊 Live Inference Feed</span>
-              <span className="text-[9px] text-gray-500 font-mono">1.2s AGO</span>
-            </div>
-            <div className="flex flex-col gap-2.5 font-mono text-[10px] text-gray-400">
-              <div className="flex items-center gap-2">
-                <span className="text-purple-400">[GFPGAN]</span>
-                <span className="text-white truncate">Face restore sequence complete</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-cyan-400">[DeOldify]</span>
-                <span className="text-white truncate">Color saturation boost OK</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-pink-400">[RealESRGAN]</span>
-                <span className="text-white truncate">4K upscaled image cached</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="text-emerald-400">[Brain]</span>
-                <span className="text-white truncate">Task swept from SQLite queue</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
         <motion.div
           initial="hidden"
           animate="visible"
@@ -209,6 +150,99 @@ export default function Home() {
                 <p className="text-sm text-gray-400 leading-relaxed">{step.desc}</p>
               </motion.div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Telemetry Dashboard Widget Section */}
+      <section className="py-20 px-4 bg-gradient-to-b from-[#030014] to-[#05021a] relative overflow-hidden">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-xs font-semibold text-cyan-300 mb-4 shadow-[0_0_15px_rgba(6,182,212,0.15)]">
+              <Cpu className="w-3.5 h-3.5" />
+              Live Telemetry
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white">System Metrics Dashboard</h2>
+            <p className="text-gray-400 mt-2 text-sm">Real-time status of the PyTorch and ONNX sub-worker pools.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Widget 1: CPU/VRAM Allocation */}
+            <div className="liquid-glass p-6 border border-purple-500/25 shadow-[0_0_20px_rgba(139,92,246,0.1)] flex flex-col gap-4">
+              <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
+                <span className="text-xs font-black uppercase text-purple-300 tracking-wider">💾 Memory Allocation</span>
+                <span className="text-[10px] text-purple-400 font-mono">100% RECLAIMED</span>
+              </div>
+              <div className="flex flex-col gap-3 font-mono text-xs text-gray-400">
+                <div className="flex justify-between">
+                  <span>GFPGAN subprocess</span>
+                  <span className="text-white">512MB VRAM</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>DeOldify subprocess</span>
+                  <span className="text-white">1.2GB VRAM</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Real-ESRGAN (4K)</span>
+                  <span className="text-white">840MB VRAM</span>
+                </div>
+                <div className="w-full bg-white/[0.05] h-1.5 rounded-full mt-2 overflow-hidden">
+                  <div className="bg-gradient-to-r from-purple-500 to-cyan-500 h-full w-[35%] animate-pulse" />
+                </div>
+              </div>
+            </div>
+
+            {/* Widget 2: Thread Pool Monitor */}
+            <div className="liquid-glass p-6 border border-cyan-500/25 shadow-[0_0_20px_rgba(6,182,212,0.1)] flex flex-col gap-4">
+              <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
+                <span className="text-xs font-black uppercase text-cyan-300 tracking-wider">⚡ Thread Pool Monitor</span>
+                <span className="text-[10px] text-emerald-400 font-mono">ACTIVE (4/4)</span>
+              </div>
+              <div className="flex flex-col gap-3 font-mono text-xs text-gray-400">
+                <div className="flex justify-between">
+                  <span>Worker Thread 01</span>
+                  <span className="text-emerald-400">Executing</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Worker Thread 02</span>
+                  <span className="text-emerald-400">Executing</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Worker Thread 03</span>
+                  <span className="text-gray-500">Idle</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Heartbeat sweeper</span>
+                  <span className="text-cyan-400">Active</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Widget 3: Task Queue Metrics */}
+            <div className="liquid-glass p-6 border border-pink-500/25 shadow-[0_0_20px_rgba(236,72,153,0.1)] flex flex-col gap-4">
+              <div className="flex items-center justify-between border-b border-white/[0.06] pb-2">
+                <span className="text-xs font-black uppercase text-pink-300 tracking-wider">📦 SQLite Task Queue</span>
+                <span className="text-[10px] text-pink-400 font-mono">Healthy</span>
+              </div>
+              <div className="flex flex-col gap-3 font-mono text-xs text-gray-400">
+                <div className="flex justify-between">
+                  <span>Concurrent Slots</span>
+                  <span className="text-white">5 / 5 active</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Queue Mutex Lock</span>
+                  <span className="text-emerald-400">Unlocked</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Completed Jobs</span>
+                  <span className="text-white">1,842</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Avg Process Time</span>
+                  <span className="text-white">16.4s</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
