@@ -104,9 +104,9 @@ export default function AuthModal() {
               {/* Logo / Header */}
               <div className="flex flex-col items-center text-center mt-1">
                 <div className="relative mb-2.5 flex items-center justify-center">
-                  <img src="/logo.png" alt="ChromaCrystal Logo" className="h-14 sm:h-16 w-auto hover:scale-115 transition-transform duration-500 drop-shadow-[0_0_8px_rgba(139,92,246,0.3)]" />
+                  <img src="/logo.png" alt="ChromaCrystal Logo" className="h-10 sm:h-11 w-auto hover:scale-105 transition-transform duration-500 drop-shadow-[0_0_8px_rgba(139,92,246,0.25)]" />
                 </div>
-                <div className="text-[9px] font-bold text-purple-400 tracking-widest uppercase mb-3.5">ChromaCrystal UHD</div>
+                <div className="text-[9px] font-bold text-purple-400 tracking-widest uppercase mb-2">ChromaCrystal UHD</div>
                 <h3 className="text-base sm:text-lg font-black text-white tracking-tight">
                   {mode === "signin" ? "Welcome Back" : "Create Account"}
                 </h3>

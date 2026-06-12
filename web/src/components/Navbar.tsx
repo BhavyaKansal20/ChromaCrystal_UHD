@@ -22,15 +22,15 @@ export default function Navbar() {
   return (
     <nav className="sticky top-0 z-50 glass-nav">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-24">
+        <div className="flex items-center justify-between h-20">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 sm:gap-3 group">
             <img
               src="/logo.png"
               alt="ChromaCrystal Logo"
-              className="h-22 sm:h-26 w-auto hover:scale-110 transition-transform duration-300 drop-shadow-[0_0_12px_rgba(139,92,246,0.35)]"
+              className="h-13 sm:h-15 w-auto hover:scale-105 transition-transform duration-300 drop-shadow-[0_0_8px_rgba(139,92,246,0.25)]"
             />
-            <span className="text-[10px] sm:text-xs md:text-sm font-black gradient-text tracking-wider uppercase whitespace-nowrap">
+            <span className="text-xs sm:text-sm font-black gradient-text tracking-wider uppercase whitespace-nowrap">
               ChromaCrystal UHD
             </span>
           </Link>

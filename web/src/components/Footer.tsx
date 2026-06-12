@@ -15,7 +15,7 @@ export default function Footer() {
               <img
                 src="/logo.png"
                 alt="ChromaCrystal Logo"
-                className="h-22 sm:h-26 w-auto hover:scale-110 transition-transform duration-300 drop-shadow-[0_0_12px_rgba(139,92,246,0.3)]"
+                className="h-12 sm:h-14 w-auto hover:scale-105 transition-transform duration-300 drop-shadow-[0_0_8px_rgba(139,92,246,0.25)]"
               />
               <span className="text-[10px] font-bold gradient-text tracking-widest uppercase">ChromaCrystal UHD</span>
             </div>

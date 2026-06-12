@@ -207,28 +207,31 @@ export default function RestorePage() {
 
       // Concurrent Multi-Format Submission to ensure compatibility with Google Apps Script
       await Promise.allSettled([
-        // 1. GET with URL Query Params
+        // 1. GET with URL Query Params (Bypasses preflight)
         fetch(submissionUrl, {
           method: "GET",
           mode: "no-cors"
         }),
-        // 2. POST with URL Query Params
+        // 2. POST with URL Query Params (Bypasses preflight)
         fetch(submissionUrl, {
           method: "POST",
           mode: "no-cors"
         }),
-        // 3. POST with URL-encoded Form body
-        fetch(GOOGLE_SHEETS_URL, {
-          method: "POST",
-          mode: "no-cors",
-          body: params
-        }),
-        // 4. POST with JSON body stringified
+        // 3. POST with URL-encoded Form body (Simple request, bypasses preflight)
         fetch(GOOGLE_SHEETS_URL, {
           method: "POST",
           mode: "no-cors",
           headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: params.toString()
+        }),
+        // 4. POST with JSON body stringified sent as text/plain (Simple request, bypasses preflight)
+        fetch(GOOGLE_SHEETS_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: {
+            "Content-Type": "text/plain"
           },
           body: JSON.stringify(payload)
         })
@@ -458,8 +461,8 @@ export default function RestorePage() {
             {!fbSubmitted ? (
               <form onSubmit={handleFeedbackSubmit} className="flex flex-col gap-5 max-w-xl mx-auto">
                 <div className="flex flex-col items-center text-center">
-                  <div className="relative mb-3 flex items-center justify-center">
-                    <img src="/logo.png" alt="ChromaCrystal Logo" className="h-20 sm:h-22 w-auto hover:scale-115 transition-transform duration-500 drop-shadow-[0_0_12px_rgba(168,85,247,0.3)]" />
+                  <div className="relative mb-2.5 flex items-center justify-center">
+                    <img src="/logo.png" alt="ChromaCrystal Logo" className="h-12 sm:h-13 w-auto hover:scale-105 transition-transform duration-500 drop-shadow-[0_0_8px_rgba(168,85,247,0.25)]" />
                   </div>
                   <div className="text-[9px] font-bold text-purple-400 tracking-widest uppercase mb-2">ChromaCrystal UHD</div>
                   <h2 className="text-xl sm:text-2xl font-black text-white">Share your experience ✨</h2>

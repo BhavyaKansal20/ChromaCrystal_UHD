@@ -22,12 +22,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="scroll-smooth">
-      <body className="font-sans antialiased min-h-screen relative bg-[#030014] text-white overflow-x-hidden">
+      <body className="font-sans antialiased min-h-screen relative bg-black text-white overflow-x-hidden">
         {/* Animated Background Orbs */}
         <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-          <div className="bg-orb bg-orb-1" />
-          <div className="bg-orb bg-orb-2" />
-          <div className="bg-orb bg-orb-3" />
+          <div className="bg-orb bg-orb-1 animate-bubble-1" />
+          <div className="bg-orb bg-orb-2 animate-bubble-2" />
+          <div className="bg-orb bg-orb-3 animate-bubble-3" />
           <div className="bg-grid absolute inset-0" />
         </div>
 

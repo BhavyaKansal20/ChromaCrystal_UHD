@@ -5,7 +5,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
 :root {
-  --background: #030014;
+  --background: #000000;
   --foreground: #ffffff;
   --glass-bg: rgba(255, 255, 255, 0.03);
   --glass-border: rgba(255, 255, 255, 0.08);
@@ -395,4 +395,28 @@ body {
 
 .animate-bob-slower {
   animation: bob-slower 8s ease-in-out infinite;
+}
+
+/* Blurry bubble drifting animations (GPU accelerated) */
+@keyframes bubble-drift-1 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(50px, -80px, 0) scale(1.15); }
+}
+@keyframes bubble-drift-2 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-60px, 60px, 0) scale(0.9); }
+}
+@keyframes bubble-drift-3 {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(70px, 40px, 0) scale(1.08); }
+}
+
+.animate-bubble-1 {
+  animation: bubble-drift-1 25s ease-in-out infinite;
+}
+.animate-bubble-2 {
+  animation: bubble-drift-2 30s ease-in-out infinite;
+}
+.animate-bubble-3 {
+  animation: bubble-drift-3 28s ease-in-out infinite;
 }
