@@ -130,7 +130,7 @@ export default function FeedbackPage() {
                 {/* Header */}
                 <div className="flex flex-col items-center text-center">
                   <div className="relative mb-2.5 flex items-center justify-center">
-                    <img src="/logo.png" alt="ChromaCrystal Logo" className="h-8 sm:h-9 w-auto hover:scale-105 transition-transform duration-500 drop-shadow-[0_0_8px_rgba(139,92,246,0.25)]" />
+                    <img src="/logo.png" alt="ChromaCrystal Logo" className="h-10 sm:h-12 w-auto hover:scale-105 transition-transform duration-500 drop-shadow-[0_0_15px_rgba(139,92,246,0.5)]" />
                   </div>
                   <div className="text-[9px] font-bold text-purple-400 tracking-widest uppercase mb-2">ChromaCrystal UHD</div>
                   <h1 className="text-xl sm:text-2xl font-black text-white leading-tight">Share your experience ✨</h1>
