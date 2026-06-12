@@ -1,14 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, FormEvent } from "react";
 import { useSession } from "@/context/AuthContext";
 import { UploadDropzone } from "@/components/UploadDropzone";
 import { ProcessingOverlay } from "@/components/ProcessingOverlay";
 import { BeforeAfterSlider } from "@/components/BeforeAfterSlider";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Download, Sparkles, Settings, Info, ChevronDown, Lock, RefreshCw, Database
+  Download, Sparkles, ChevronDown, Lock, RefreshCw, Database, History, Trash2, Send, Star, CheckCircle, Loader2, X
 } from "lucide-react";
+
+const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbzJRMguV_tan7GbxBkC0fjOYjpCEpjFz0IDxJyX4wiuJRtLSOZwXvVn8SDLTnN10-s8sw/exec";
+
+interface HistoryItem {
+  id: string;
+  name: string;
+  url: string;
+  originalUrl: string;
+  date: string;
+}
 
 export default function RestorePage() {
   const { data: session, status: authStatus, setShowAuthModal } = useSession();
@@ -26,8 +36,48 @@ export default function RestorePage() {
   const [enableFaceRestoration, setEnableFaceRestoration] = useState<boolean>(true);
   const [enableUpscaling, setEnableUpscaling] = useState<boolean>(true);
   const [showSettings, setShowSettings] = useState<boolean>(false);
+  const [showSuccessModal, setShowSuccessModal] = useState<boolean>(false);
 
-  // Automatically prompt auth modal if unauthenticated
+  // History state
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+
+  // Inline Feedback Form State
+  const [fbName, setFbName] = useState("");
+  const [fbFeature, setFbFeature] = useState("✨ All Features");
+  const [fbRating, setFbRating] = useState(0);
+  const [fbHoveredStar, setFbHoveredStar] = useState(0);
+  const [fbHelpful, setFbHelpful] = useState<string | null>("Yes");
+  const [fbMessage, setFbMessage] = useState("");
+  const [fbSubmitting, setFbSubmitting] = useState(false);
+  const [fbSubmitted, setFbSubmitted] = useState(false);
+
+  const featuresList = [
+    { label: "Colorization", icon: "🎨" },
+    { label: "Face Restore", icon: "👤" },
+    { label: "4K Upscale", icon: "⚡" },
+    { label: "All Features", icon: "✨" },
+  ];
+
+  // Load history from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("chromacrystal_history");
+    if (stored) {
+      try {
+        setHistory(JSON.parse(stored));
+      } catch (e) {
+        console.error("Failed to parse history", e);
+      }
+    }
+  }, []);
+
+  // Update default name when session changes
+  useEffect(() => {
+    if (session?.user?.name) {
+      setFbName(session.user.name);
+    }
+  }, [session]);
+
+  // Prompt login modal if unauthenticated
   useEffect(() => {
     if (authStatus === "unauthenticated") {
       setShowAuthModal(true);
@@ -40,6 +90,9 @@ export default function RestorePage() {
     setProgress(0);
     setQueuePosition(null);
     setOriginalUrl(URL.createObjectURL(selectedFile));
+    setFbSubmitted(false); // Reset feedback form state for new restoration
+    setFbMessage("");
+    setFbRating(0);
 
     const formData = new FormData();
     formData.append("file", selectedFile);
@@ -55,7 +108,7 @@ export default function RestorePage() {
       const data = await res.json();
       if (data.job_id) {
         setJobId(data.job_id);
-        pollStatus(data.job_id);
+        pollStatus(data.job_id, selectedFile.name, URL.createObjectURL(selectedFile));
       } else {
         setStatus("error");
       }
@@ -65,7 +118,7 @@ export default function RestorePage() {
     }
   };
 
-  const pollStatus = async (id: string) => {
+  const pollStatus = async (id: string, fileName: string, origUrl: string) => {
     const interval = setInterval(async () => {
       try {
         const res = await fetch(`/api/v1/status/${id}`);
@@ -75,7 +128,25 @@ export default function RestorePage() {
         if (data.status === "completed") {
           clearInterval(interval);
           setStatus("completed");
-          setResultUrl(`/api/v1/download/${id}`);
+          const dlUrl = `/api/v1/download/${id}`;
+          setResultUrl(dlUrl);
+          setShowSuccessModal(true);
+
+          // Save to downloads history
+          const newItem: HistoryItem = {
+            id,
+            name: fileName,
+            url: dlUrl,
+            originalUrl: origUrl,
+            date: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          };
+
+          setHistory(prev => {
+            const updated = [newItem, ...prev];
+            localStorage.setItem("chromacrystal_history", JSON.stringify(updated));
+            return updated;
+          });
+
         } else if (data.status === "failed") {
           clearInterval(interval);
           setStatus("error");
@@ -88,6 +159,62 @@ export default function RestorePage() {
         setStatus("error");
       }
     }, 1000);
+  };
+
+  const handleClearHistoryItem = (id: string) => {
+    setHistory(prev => {
+      const updated = prev.filter(item => item.id !== id);
+      localStorage.setItem("chromacrystal_history", JSON.stringify(updated));
+      return updated;
+    });
+  };
+
+  const handleClearAllHistory = () => {
+    setHistory([]);
+    localStorage.removeItem("chromacrystal_history");
+  };
+
+  const handleFeedbackSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setFbSubmitting(true);
+
+    const userEmail = session?.user?.email || "anonymous@chromacrystal.com";
+    const feedbackText = `Feature: ${fbFeature} | Helpful: ${fbHelpful} | Message: ${fbMessage} | Inline Workspace Feedback`;
+
+    try {
+      const payload = {
+        name: fbName || "Anonymous User",
+        email: userEmail,
+        rating: fbRating.toString(),
+        prediction_type: fbFeature || "✨ All Features",
+        helpful: fbHelpful || "Yes",
+        message: fbMessage || "No message",
+        feedback: feedbackText,
+        get_reports: "No"
+      };
+
+      const params = new URLSearchParams();
+      Object.entries(payload).forEach(([key, val]) => {
+        params.append(key, val);
+      });
+
+      const submissionUrl = `${GOOGLE_SHEETS_URL}?${params.toString()}`;
+
+      await fetch(submissionUrl, {
+        method: "POST",
+        mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+      setFbSubmitted(true);
+    } catch (err) {
+      console.error(err);
+      setFbSubmitted(true);
+    } finally {
+      setFbSubmitting(false);
+    }
   };
 
   if (authStatus === "loading") {
@@ -128,16 +255,18 @@ export default function RestorePage() {
   }
 
   return (
-    <div className="py-12 sm:py-20 px-4 max-w-4xl mx-auto flex flex-col gap-8">
+    <div className="py-12 sm:py-20 px-4 max-w-4xl mx-auto flex flex-col gap-10">
+      {/* Title */}
       <div className="text-center">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-500/10 border border-purple-500/20 text-xs font-semibold text-purple-300 mb-4 shadow-[0_0_15px_rgba(168,85,247,0.1)]">
           <Sparkles className="w-3.5 h-3.5" />
-          Workspace Authorized
+          Workspace Active
         </div>
-        <h1 className="text-3xl sm:text-4xl font-extrabold text-white">Start Restoring</h1>
-        <p className="text-gray-400 mt-2 text-sm">Upload a photo to initiate GFPGAN & DeOldify sequences.</p>
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-white">Restoration Workshop</h1>
+        <p className="text-gray-400 mt-2 text-sm">Upload a photo to run the GFPGAN, DeOldify, and Real-ESRGAN sequences.</p>
       </div>
 
+      {/* Main Upload Workspace */}
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
@@ -248,7 +377,7 @@ export default function RestorePage() {
             >
               <Database className="w-5 h-5 text-cyan-400 shrink-0 mt-0.5" />
               <div>
-                <span className="font-bold text-white block mb-0.5">Photo is available in the downloads section. Just go and download!</span>
+                <span className="font-bold text-white block mb-0.5">Photo is available in the downloads section below. Just go and download!</span>
                 This is a temporary database. Restored photos are cached in-memory and auto-purged within 3–5 hours. Please download your files promptly.
               </div>
             </motion.div>
@@ -288,6 +417,331 @@ export default function RestorePage() {
           </div>
         )}
       </motion.div>
+
+      {/* Inline Feedback Form (Shows right after successful restoration) */}
+      {status === "completed" && (
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="glass-card p-6 sm:p-8 border border-white/[0.08]"
+        >
+          <AnimatePresence mode="wait">
+            {!fbSubmitted ? (
+              <form onSubmit={handleFeedbackSubmit} className="flex flex-col gap-5 max-w-xl mx-auto">
+                <div>
+                  <div className="text-[10px] font-bold text-purple-400 tracking-wider uppercase mb-1">Feedback Form</div>
+                  <h2 className="text-2xl font-black text-white">Share your experience ✨</h2>
+                  <p className="text-xs text-gray-500 mt-1">Takes 30 seconds — helps us improve!</p>
+                </div>
+
+                <div className="h-px bg-white/[0.06]" />
+
+                {/* Name */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-gray-500 tracking-wider uppercase">Your Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={fbName}
+                    onChange={(e) => setFbName(e.target.value)}
+                    placeholder="Mr. Kansal"
+                    className="w-full bg-[#110e2e]/60 border border-white/[0.08] focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none transition-all"
+                  />
+                </div>
+
+                {/* What did you restore */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-bold text-gray-500 tracking-wider uppercase">What did you restore?</label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {featuresList.map((f) => {
+                      const val = `${f.icon} ${f.label}`;
+                      const isSelected = fbFeature === val;
+                      return (
+                        <button
+                          key={f.label}
+                          type="button"
+                          onClick={() => setFbFeature(val)}
+                          className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                            isSelected
+                              ? "bg-purple-500/10 border-purple-500/40 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.1)]"
+                              : "bg-[#110e2e]/40 border-white/[0.06] text-gray-400 hover:bg-white/[0.02] hover:text-white"
+                          }`}
+                        >
+                          <span>{f.icon}</span>
+                          <span>{f.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Rating */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-bold text-gray-500 tracking-wider uppercase">Rate your experience</label>
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const isActive = star <= (fbHoveredStar || fbRating);
+                      return (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setFbRating(star)}
+                          onMouseEnter={() => setFbHoveredStar(star)}
+                          onMouseLeave={() => setFbHoveredStar(0)}
+                          className="p-1 hover:scale-110 transition-transform cursor-pointer"
+                        >
+                          <Star
+                            className={`h-7 w-7 transition-all ${
+                              isActive
+                                ? "fill-yellow-400 text-yellow-400 drop-shadow-[0_0_10px_rgba(250,204,21,0.5)]"
+                                : "text-gray-700"
+                            }`}
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Was this helpful */}
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-bold text-gray-500 tracking-wider uppercase">Was this helpful?</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {["Yes", "No"].map((opt) => {
+                      const isSelected = fbHelpful === opt;
+                      const icon = opt === "Yes" ? "👍" : "👎";
+                      return (
+                        <button
+                          key={opt}
+                          type="button"
+                          onClick={() => setFbHelpful(opt)}
+                          className={`flex items-center justify-center gap-2 py-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
+                            isSelected
+                              ? "bg-purple-500/10 border-purple-500/40 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.1)]"
+                              : "bg-[#110e2e]/40 border-white/[0.06] text-gray-400 hover:bg-white/[0.02]"
+                          }`}
+                        >
+                          <span>{icon}</span>
+                          <span>{opt}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Message */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-bold text-gray-500 tracking-wider uppercase">Leave a message</label>
+                  <textarea
+                    rows={4}
+                    value={fbMessage}
+                    onChange={(e) => setFbMessage(e.target.value)}
+                    placeholder="Tell us what you think, what can be improved..."
+                    className="w-full bg-[#110e2e]/60 border border-white/[0.08] focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none transition-all resize-none"
+                  />
+                </div>
+
+                {/* Submit button */}
+                <motion.button
+                  whileHover={{ scale: 1.01 }}
+                  whileTap={{ scale: 0.99 }}
+                  type="submit"
+                  disabled={fbSubmitting || fbRating === 0}
+                  className="w-full mt-2 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-cyan-500 hover:brightness-110 text-white font-bold text-sm shadow-[0_0_20px_rgba(147,51,234,0.3)] border border-purple-500/20 flex items-center justify-center gap-2 cursor-pointer transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {fbSubmitting ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Submitting...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Submit Feedback ✨</span>
+                    </>
+                  )}
+                </motion.button>
+              </form>
+            ) : (
+              <motion.div
+                key="fb-success"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="py-8 text-center flex flex-col items-center gap-5"
+              >
+                <div className="rounded-full bg-gradient-to-br from-green-500/20 to-emerald-500/20 p-5 ring-1 ring-green-400/30 shadow-[0_0_30px_rgba(34,197,94,0.2)]">
+                  <CheckCircle className="h-10 w-10 text-green-400 animate-bounce" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white mb-2">Feedback Recorded!</h2>
+                  <p className="text-xs text-gray-400 leading-relaxed max-w-xs mx-auto">
+                    Your feedback was posted to Google Sheets. Thank you for helping us optimize our models!
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      )}
+
+      {/* Restored Downloads History List */}
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+        className="glass-card p-6 sm:p-10 border border-white/[0.08]"
+      >
+        <div className="flex items-center justify-between mb-6 border-b border-white/[0.06] pb-4">
+          <div className="flex items-center gap-2">
+            <History className="w-5 h-5 text-purple-400" />
+            <h2 className="text-xl font-bold text-white">Downloads History</h2>
+          </div>
+          {history.length > 0 && (
+            <button
+              onClick={handleClearAllHistory}
+              className="text-xs text-red-400 hover:text-red-350 flex items-center gap-1 cursor-pointer font-semibold bg-red-500/5 hover:bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/10"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Clear History
+            </button>
+          )}
+        </div>
+
+        {history.length === 0 ? (
+          <div className="text-center py-10 text-gray-500 text-sm flex flex-col items-center gap-2">
+            <Database className="w-8 h-8 text-gray-600 animate-pulse" />
+            <span>No restorations in this session yet. Your downloads list is empty.</span>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4">
+            {history.map((item) => (
+              <motion.div
+                key={item.id}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center justify-between p-4 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all gap-4"
+              >
+                <div className="flex items-center gap-4 min-w-0">
+                  {/* Thumbnail */}
+                  <div className="w-12 h-12 rounded-lg overflow-hidden border border-white/[0.08] bg-black/30 shrink-0">
+                    <img src={item.url} alt="Thumbnail" className="w-full h-full object-cover" />
+                  </div>
+                  {/* Name and Date */}
+                  <div className="min-w-0">
+                    <div className="text-xs sm:text-sm font-semibold text-white truncate max-w-[200px] sm:max-w-[320px]">{item.name}</div>
+                    <div className="text-[10px] text-gray-500 mt-0.5">Restored at {item.date} · Temporary Cache</div>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2">
+                  <a
+                    href={item.url}
+                    download={`ChromaCrystal_${item.name}`}
+                    className="p-2 sm:px-4 sm:py-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/20 text-purple-300 text-xs font-semibold flex items-center gap-1.5 transition-all"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Download</span>
+                  </a>
+                  <button
+                    onClick={() => handleClearHistoryItem(item.id)}
+                    className="p-2 rounded-xl bg-white/[0.03] hover:bg-red-500/15 border border-white/[0.06] hover:border-red-500/10 text-gray-400 hover:text-red-400 transition-all cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </motion.div>
+
+      {/* Restoration Success Modal Overlay */}
+      <AnimatePresence>
+        {showSuccessModal && resultUrl && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="glass-card max-w-md w-full p-6 sm:p-8 border border-white/[0.08] flex flex-col items-center gap-5 shadow-[0_0_50px_rgba(139,92,246,0.2)] text-center relative"
+            >
+              {/* Close Button top right */}
+              <button
+                onClick={() => setShowSuccessModal(false)}
+                className="absolute top-4 right-4 p-1 rounded-lg hover:bg-white/[0.05] text-gray-500 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="rounded-full bg-gradient-to-br from-purple-500/20 to-cyan-500/20 p-5 ring-1 ring-purple-500/30 shadow-[0_0_30px_rgba(168,85,247,0.2)]">
+                <CheckCircle className="h-10 w-10 text-purple-400 animate-pulse" />
+              </div>
+
+              <div>
+                <h2 className="text-2xl font-black text-white tracking-tight">Restoration Complete! 🎉</h2>
+                <p className="text-xs text-gray-400 mt-1">
+                  Your photo has been successfully restored to Ultra-HD.
+                </p>
+              </div>
+
+              {/* Thumbnail of restored image */}
+              <div className="w-full h-40 rounded-xl overflow-hidden border border-white/[0.08] bg-black/20 relative group">
+                <img
+                  src={resultUrl}
+                  alt="Restored Preview"
+                  className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end justify-center p-2">
+                  <span className="text-[10px] text-gray-300 font-semibold uppercase tracking-wider">Restored Preview</span>
+                </div>
+              </div>
+
+              {/* Database Notice Alert */}
+              <div className="flex gap-2.5 p-3.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-left text-xs leading-relaxed">
+                <Database className="w-4.5 h-4.5 text-cyan-400 shrink-0 mt-0.5" />
+                <div>
+                  <span className="font-bold text-white block mb-0.5">Photo is available in the downloads section.</span>
+                  This is a temporary database. Restored photos are cached in-memory and auto-purged within 3–5 hours. Please download your files promptly.
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="w-full flex flex-col gap-2.5">
+                <a
+                  href={resultUrl}
+                  download={`ChromaCrystal_${file?.name || "restored.jpg"}`}
+                  onClick={() => setShowSuccessModal(false)}
+                  className="w-full btn-primary py-3 rounded-xl text-sm flex items-center justify-center gap-2 cursor-pointer font-bold shadow-[0_0_20px_rgba(147,51,234,0.3)] border border-purple-500/20"
+                >
+                  <Download className="h-4.5 w-4.5" />
+                  Download Masterpiece
+                </a>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      setStatus("idle");
+                      setShowSuccessModal(false);
+                    }}
+                    className="btn-secondary py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer font-medium"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    Restore Another
+                  </button>
+                  <button
+                    onClick={() => setShowSuccessModal(false)}
+                    className="btn-secondary py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5 cursor-pointer font-medium"
+                  >
+                    Close & Compare
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

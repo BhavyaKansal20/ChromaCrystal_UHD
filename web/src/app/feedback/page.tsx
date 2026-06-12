@@ -16,7 +16,6 @@ export default function FeedbackPage() {
   const [hoveredStar, setHoveredStar] = useState(0);
   const [helpful, setHelpful] = useState<string | null>("Yes");
   const [message, setMessage] = useState("");
-  const [getReports, setGetReports] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -32,25 +31,39 @@ export default function FeedbackPage() {
     setIsSubmitting(true);
 
     const userEmail = session?.user?.email || "anonymous@chromacrystal.com";
-    const feedbackText = `Feature: ${feature} | Helpful: ${helpful} | Get Reports: ${getReports} | Message: ${message}`;
+    const feedbackText = `Feature: ${feature} | Helpful: ${helpful} | Message: ${message}`;
 
     try {
-      const formData = new URLSearchParams();
-      formData.append("name", name || "Anonymous User");
-      formData.append("email", userEmail);
-      formData.append("rating", rating.toString());
-      formData.append("feedback", feedbackText);
+      const payload = {
+        name: name || "Anonymous User",
+        email: userEmail,
+        rating: rating.toString(),
+        prediction_type: feature || "✨ All Features",
+        helpful: helpful || "Yes",
+        message: message || "No message",
+        feedback: feedbackText,
+        get_reports: "No"
+      };
 
-      await fetch(GOOGLE_SHEETS_URL, {
+      const params = new URLSearchParams();
+      Object.entries(payload).forEach(([key, val]) => {
+        params.append(key, val);
+      });
+
+      const submissionUrl = `${GOOGLE_SHEETS_URL}?${params.toString()}`;
+
+      await fetch(submissionUrl, {
         method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: formData.toString(),
         mode: "no-cors",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
       });
       setIsSubmitted(true);
     } catch (err) {
       console.error(err);
-      setIsSubmitted(true); // Standard mode: no-cors resolves as opaque, treat as submitted
+      setIsSubmitted(true); // Treat as submitted (no-cors mode)
     } finally {
       setIsSubmitting(false);
     }
@@ -63,7 +76,6 @@ export default function FeedbackPage() {
     setHoveredStar(0);
     setHelpful("Yes");
     setMessage("");
-    setGetReports(false);
     setIsSubmitted(false);
   };
 
@@ -189,7 +201,7 @@ export default function FeedbackPage() {
                   </div>
                 </div>
 
-                {/* Message */}
+                 {/* Message */}
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-bold text-gray-500 tracking-wider uppercase">Leave a message</label>
                   <textarea
@@ -200,25 +212,6 @@ export default function FeedbackPage() {
                     className="w-full bg-[#110e2e]/60 border border-white/[0.08] focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 rounded-xl px-4 py-3 text-sm text-white placeholder-gray-600 outline-none transition-all resize-none"
                   />
                 </div>
-
-                {/* Checkbox */}
-                <label className="flex items-center gap-3 cursor-pointer group mt-1 select-none">
-                  <div className="relative flex items-center justify-center">
-                    <input
-                      type="checkbox"
-                      checked={getReports}
-                      onChange={(e) => setGetReports(e.target.checked)}
-                      className="peer sr-only"
-                    />
-                    <div className="w-5 h-5 border border-white/[0.08] bg-[#110e2e]/60 rounded-md transition-all peer-checked:bg-purple-600 peer-checked:border-purple-500/40" />
-                    <svg className="absolute w-3.5 h-3.5 text-white scale-0 peer-checked:scale-100 transition-transform pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span className="text-xs text-gray-400 group-hover:text-white transition-colors">
-                    Get predicted reports in reports section
-                  </span>
-                </label>
 
                 {/* Submit button */}
                 <motion.button
