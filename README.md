@@ -1,4 +1,4 @@
----
+<img width="734" height="655" alt="Screenshot 2026-06-12 at 6 42 37 PM" src="https://github.com/user-attachments/assets/cec44b5c-e919-42b9-9ff5-10710f259c90" />---
 title: ChromaCrystal UHD
 emoji: 💎
 colorFrom: purple
@@ -10,7 +10,9 @@ pinned: false
 
 <div align="center">
 
-<br>
+![ChromaCrystal UHD Banner](banner.png)
+
+<br/>
 
 ```text
   ██████╗██╗  ██╗██████╗  ██████╗ ███╗   ███╗ █████╗ 
