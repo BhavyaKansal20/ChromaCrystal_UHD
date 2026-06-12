@@ -1,4 +1,4 @@
-<img width="734" height="655" alt="Screenshot 2026-06-12 at 6 42 37 PM" src="https://github.com/user-attachments/assets/cec44b5c-e919-42b9-9ff5-10710f259c90" />---
+---
 title: ChromaCrystal UHD
 emoji: 💎
 colorFrom: purple
@@ -8,25 +8,19 @@ app_port: 7860
 pinned: false
 ---
 
+---
+
 <div align="center">
 
 ![ChromaCrystal UHD Banner](banner.png)
 
 <br/>
 
+---
+
 ```text
-  ██████╗██╗  ██╗██████╗  ██████╗ ███╗   ███╗ █████╗ 
- ██╔════╝██║  ██║██╔══██╗██╔═══██╗████╗ ████║██╔══██╗
- ██║     ███████║██████╔╝██║   ██║██╔████╔██║███████║
- ██║     ██╔══██║██╔══██╗██║   ██║██║╚██╔╝██║██╔══██║
- ╚██████╗██║  ██║██║  ██║╚██████╔╝██║ ╚═╝ ██║██║  ██║
-  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝ ╚═╝     ╚═╝╚═╝  ╚═╝
-  ██████╗██████╗ ██╗   ██╗███████╗████████╗ █████╗ ██╗     
- ██╔════╝██╔══██╗╚██╗ ██╔╝██╔════╝╚══██╔══╝██╔══██╗██║     
- ██║     ██████╔╝ ╚████╔╝ ███████╗   ██║   ███████║██║     
- ██║     ██╔══██╗  ╚██╔╝  ╚════██║   ██║   ██╔══██║██║     
- ╚██████╗██║  ██║   ██║   ███████║   ██║   ██║  ██║███████╗
-  ╚═════╝╚═╝  ╚═╝   ╚═╝   ╚══════╝   ╚═╝   ╚═╝  ╚═╝╚══════╝
+█▀▀ █ █ █▀█ █▀█ █▀▄▀█ ▄▀█      █▀▀ █▀▄ ▀█▀ █▀▀ ▀█▀ ▄▀█ █░░      █░█ █░█ █▀▄
+█▄▄ █▀█ █▀▄ █▄█ █░▀░█ █▀█      █▄▄ █▀▄ ░█░ ▄▄█ ░█░ █▀█ █▄▄      █▄█ █▀█ █▄▀
 ```
 
 ### ✦ The Ultimate AI Image Restoration Pipeline ✦
@@ -115,7 +109,7 @@ pinned: false
 ║   (Dynamic Math)        (Colorization)             (Face Restore)   │        ║
 ║   Resizes base img      Injects perfect skin       Extracts face,   │        ║
 ║   using Traffic Sensor  tones and environment      AI restores it,  │        ║
-║   to prevent OOM.       colors.                    pastes it back.  │        ║
+║   colors.                    pastes it back.  │        ║
 ║                                                                     │        ║
 ║   UI OUTPUT ◄────────── 5. WATERMARK ◄──────────── 4. REAL-ESRGAN ◄─┘        ║
 ║   React frontend        Stamps logo with           (4K Texture)              ║
@@ -254,7 +248,7 @@ npm run dev
 
 <br>
 
-## 👨‍💻 Author
+## 👨💻 Author
 
 <div align="center">
 
@@ -305,7 +299,7 @@ Every star helps this project reach more developers. 🙏
 
 ```text
   ╔══════════════════════════════════════════════════════╗
-  ║     🔮  C H R O M A   C R Y S T A L   U H D          ║
+  ║     🔮  C H R O M A   C R S Y T A L   U H D          ║
   ║     MultiModex AI  •  © 2026 Bhavya Kansal           ║
   ║     Transforming Memories into Ultra-HD Reality      ║
   ╚══════════════════════════════════════════════════════╝
